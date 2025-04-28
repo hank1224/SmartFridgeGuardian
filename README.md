@@ -4,6 +4,8 @@ A project leveraging IoT, Fog Computing, and Cloud technologies to create a smar
 
 **Check out for our Proposal: [PDF file here](./static/MidtermProposal.pdf)**
 
+**Web Introduction: [GitHub Pages](https://hank1224.github.io/SmartFridgeGuardian/)**
+
 This repository contains the implementation of the Proof of Concept (PoC) version.
 
 ## Table of Contents

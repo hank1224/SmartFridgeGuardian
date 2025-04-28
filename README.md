@@ -37,7 +37,7 @@ The full system envisions advanced features such as **automatic item recognition
 
 ### Full Project System Architecture
 
-![Full Project Architecture](./static/full_version_arch.jpeg)
+![Full Project Architecture](./static/full_version_arch.jpg)
 
 ---
 
@@ -86,7 +86,7 @@ This PoC implementation has the following limitations:
 
 The PoC employs a typical three-layer IoT architecture: Edge, Fog, and Cloud.
 
-![PoC Architecture](./static/PoC_version_arch.jpeg)
+![PoC Architecture](./static/PoC_version_arch.jpg)
 
 *   **Edge Layer:**
     *   **Hardware:** ESP32-CAM board (with WiFi, Bluetooth, Camera), Reed switch or Light Dependent Resistor (LDR) to detect door state.

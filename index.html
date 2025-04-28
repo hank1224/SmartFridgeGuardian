@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Fridge Guardian - Intelligent Shared Fridge Management</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+
+    <!-- Font Awesome CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- Google Fonts (Optional - for a nicer look) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">
+                <i class="fas fa-shield-alt me-2 text-primary"></i>Smart Fridge Guardian
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#hero">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#problem">The Problem</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#solution">Our Solution</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#features">PoC Features</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-primary btn-sm text-white px-3 ms-lg-3" href="YOUR_GITHUB_REPO_LINK_HERE" target="_blank">
+                            <i class="fab fa-github me-1"></i> View on GitHub
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="hero" class="hero-section text-center text-white d-flex align-items-center">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <h1 class="display-4 fw-bold mb-4 animated-headline">Meet Your <span class="highlight">Smart Fridge Guardian</span>!</h1>
+                    <p class="lead mb-5">Tired of shared fridge chaos? Our IoT project brings intelligence, order, and a bit of fun to managing communal refrigerators in dorms, offices, and shared spaces.</p>
+                    <a href="#problem" class="btn btn-lg btn-light text-primary fw-bold me-3">Discover the Problem</a>
+                    <a href="YOUR_GITHUB_REPO_LINK_HERE" class="btn btn-lg btn-outline-light fw-bold" target="_blank"><i class="fab fa-github me-2"></i>See the Code</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem Section -->
+    <section id="problem" class="py-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">Is Your Shared Fridge a <span class="text-danger">War Zone</span>?</h2>
+                <p class="lead text-muted">Shared fridges often become battlegrounds for space and forgotten food.</p>
+            </div>
+            <div class="row g-4 text-center">
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm border-0 problem-card">
+                        <div class="card-body">
+                            <div class="icon-circle bg-danger mb-3"><i class="fas fa-ghost fa-2x text-white"></i></div>
+                            <h4 class="card-title fw-bold">Food Theft & Misappropriation</h4>
+                            <p class="card-text">"Who drank my milk?!" Items vanish mysteriously, causing frustration and mistrust.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm border-0 problem-card">
+                        <div class="card-body">
+                            <div class="icon-circle bg-warning mb-3"><i class="fas fa-trash-alt fa-2x text-white"></i></div>
+                            <h4 class="card-title fw-bold">Food Waste & Spoilage</h4>
+                            <p class="card-text">Forgotten leftovers become science experiments. Good food gets wasted.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm border-0 problem-card">
+                        <div class="card-body">
+                            <div class="icon-circle bg-info mb-3"><i class="fas fa-question-circle fa-2x text-white"></i></div>
+                            <h4 class="card-title fw-bold">Management Chaos</h4>
+                            <p class="card-text">No tracking of who owns what, when it was added, or when it expires.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Solution / How It Works Section -->
+    <section id="solution" class="py-5 bg-light">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">Our <span class="text-primary">Smart Solution</span></h2>
+                <p class="lead text-muted">Leveraging IoT, Fog, and Cloud technologies for a seamless experience.</p>
+            </div>
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6">
+                    <!-- Placeholder for an image or diagram -->
+                    <img src="https://via.placeholder.com/500x350/dee2e6/6c757d.png?text=System+Overview+Diagram" class="img-fluid rounded shadow" alt="System Architecture Diagram">
+                    <p class="text-muted small text-center mt-2">Conceptual System Flow</p>
+                </div>
+                <div class="col-lg-6">
+                    <h3 class="fw-bold mb-3">How It Works (PoC):</h3>
+                    <div class="d-flex align-items-start mb-3 step">
+                        <div class="step-icon me-3"><i class="fas fa-door-open"></i></div>
+                        <div>
+                            <h5 class="fw-semibold">1. Door Event & Capture</h5>
+                            <p>An ESP32-CAM detects when the fridge door opens and snaps a quick photo.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-start mb-3 step">
+                        <div class="step-icon me-3"><i class="fas fa-server"></i></div>
+                        <div>
+                            <h5 class="fw-semibold">2. Fog Processing (RPi)</h5>
+                            <p>A Raspberry Pi acts as a gateway, receiving data from the ESP32 and relaying it reliably.</p>
+                        </div>
+                    </div>
+                     <div class="d-flex align-items-start mb-3 step">
+                        <div class="step-icon me-3"><i class="fas fa-cloud-upload-alt"></i></div>
+                        <div>
+                            <h5 class="fw-semibold">3. Cloud Sync (AWS)</h5>
+                            <p>Event data (time, photo link) is securely uploaded to AWS (S3, DynamoDB).</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-start step">
+                        <div class="step-icon me-3"><i class="fas fa-mobile-alt"></i></div>
+                        <div>
+                            <h5 class="fw-semibold">4. User Interaction & Alerts</h5>
+                            <p>Users register items via an app, view status on a dashboard, and get expiry notifications (SNS).</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PoC Features Section -->
+    <section id="features" class="py-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">Proof of Concept <span class="text-success">Features</span></h2>
+                <p class="lead text-muted">Demonstrating the core functionalities.</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-6">
+                    <div class="card feature-card h-100 text-center">
+                        <div class="card-body">
+                             <i class="fas fa-edit fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title fw-bold">Item Registration</h5>
+                            <p class="card-text">Simple web/app interface to log items, owners, and expiry dates.</p>
+                        </div>
+                    </div>
+                </div>
+                 <div class="col-lg-4 col-md-6">
+                    <div class="card feature-card h-100 text-center">
+                        <div class="card-body">
+                            <i class="fas fa-camera-retro fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title fw-bold">Door Monitoring & Photo</h5>
+                            <p class="card-text">ESP32-CAM detects door openings and captures visual evidence.</p>
+                        </div>
+                    </div>
+                </div>
+                 <div class="col-lg-4 col-md-6">
+                    <div class="card feature-card h-100 text-center">
+                        <div class="card-body">
+                            <i class="fas fa-cloud fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title fw-bold">Cloud Storage</h5>
+                            <p class="card-text">Securely stores event logs, item lists, and photos on AWS S3 & DynamoDB.</p>
+                         </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <div class="card feature-card h-100 text-center">
+                        <div class="card-body">
+                            <i class="fas fa-bell fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title fw-bold">Expiry Reminders</h5>
+                            <p class="card-text">Automatic email/SNS notifications for items nearing their expiry date.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <div class="card feature-card h-100 text-center">
+                        <div class="card-body">
+                            <i class="fas fa-tachometer-alt fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title fw-bold">Simple Dashboard</h5>
+                            <p class="card-text">Basic web view showing current fridge inventory and recent activity.</p>
+                        </div>
+                    </div>
+                </div>
+                 <div class="col-lg-4 col-md-6">
+                    <div class="card feature-card h-100 text-center">
+                        <div class="card-body">
+                             <i class="fas fa-network-wired fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title fw-bold">Fog Computing Node</h5>
+                            <p class="card-text">Uses Raspberry Pi for local buffering and reliable data transmission.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Future Vision Section -->
+    <section id="future" class="py-5 bg-dark text-white">
+        <div class="container text-center">
+             <h2 class="fw-bold mb-4">The <span class="highlight-dark">Future</span> is Smarter</h2>
+             <p class="lead mb-5">The full vision includes even more intelligent features:</p>
+             <div class="row g-4">
+                 <div class="col-md-3 col-sm-6">
+                     <i class="fas fa-brain fa-3x mb-2 text-info"></i>
+                     <h5 class="fw-semibold">Image Recognition</h5>
+                     <p class="small">Auto-identify items</p>
+                 </div>
+                 <div class="col-md-3 col-sm-6">
+                     <i class="fas fa-weight-hanging fa-3x mb-2 text-info"></i>
+                     <h5 class="fw-semibold">Weight Sensing</h5>
+                     <p class="small">Monitor quantity</p>
+                 </div>
+                 <div class="col-md-3 col-sm-6">
+                     <i class="fas fa-user-secret fa-3x mb-2 text-info"></i>
+                     <h5 class="fw-semibold">Anomaly Detection</h5>
+                      <p class="small">Flag suspicious activity</p>
+                 </div>
+                 <div class="col-md-3 col-sm-6">
+                     <i class="fas fa-share-alt fa-3x mb-2 text-info"></i>
+                     <h5 class="fw-semibold">Social Sharing</h5>
+                     <p class="small">Share/gift items</p>
+                 </div>
+             </div>
+        </div>
+    </section>
+
+     <!-- Call to Action / GitHub Section -->
+    <section id="github" class="py-5 text-center bg-gradient-primary-secondary">
+        <div class="container text-white">
+            <h2 class="fw-bold mb-3">Interested in the Tech?</h2>
+            <p class="lead mb-4">Dive into the code, see how it works, or contribute!</p>
+            <a href="https://github.com/hank1224/SmartFridgeGuardian" class="btn btn-lg btn-light fw-bold text-primary" target="_blank">
+                <i class="fab fa-github fa-lg me-2"></i> View Project on GitHub
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-4 bg-light">
+        <div class="container text-center text-muted">
+            <small>Copyright © 2024 [Your Name/Team Name]. Built for the Smart Fridge Guardian Project.</small>
+            <br>
+            <small>Powered by Bootstrap & Font Awesome</small>
+        </div>
+    </footer>
+
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <!-- Custom JS (Optional - for animations etc.) -->
+    <!-- <script src="script.js"></script> -->
+</body>
+</html>

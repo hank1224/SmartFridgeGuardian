@@ -1,0 +1,144 @@
+/* Import Google Font */
+body {
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Hero Section Styling */
+.hero-section {
+    background: linear-gradient(rgba(29, 34, 67, 0.7), rgba(29, 34, 67, 0.9)), url('https://images.unsplash.com/photo-1588977950967-16b7b6d36c6a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&q=80&w=1920') no-repeat center center; /* Replace with a relevant fridge/tech background */
+    background-size: cover;
+    min-height: 85vh; /* Adjust as needed */
+    padding: 6rem 0;
+    position: relative;
+    overflow: hidden; /* Prevents animation overflow */
+}
+
+.hero-section .highlight {
+    color: #0d6efd; /* Bootstrap primary color */
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 0.1em 0.3em;
+    border-radius: 5px;
+    font-weight: 700;
+}
+
+/* Simple Headline Animation */
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animated-headline {
+    animation: fadeInDown 1s ease-out;
+}
+
+
+/* Section Padding */
+section {
+    padding: 60px 0;
+}
+
+/* Problem Section Cards */
+.problem-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 15px !important; /* Override Bootstrap's default */
+}
+
+.problem-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 1rem 3rem rgba(0,0,0,.175)!important; /* Enhanced shadow on hover */
+}
+
+.icon-circle {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem; /* More space */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Solution Section Styling */
+.step-icon {
+    flex-shrink: 0;
+    width: 50px;
+    height: 50px;
+    background-color: var(--bs-primary);
+    color: white;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.step {
+    transition: transform 0.2s ease;
+}
+
+.step:hover {
+    transform: translateX(5px);
+}
+
+/* Feature Cards */
+.feature-card {
+     border: none;
+     border-radius: 10px;
+     background-color: #f8f9fa; /* Light background */
+     transition: transform 0.3s ease, box-shadow 0.3s ease;
+     overflow: hidden; /* Ensure icon background doesn't spill */
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+}
+
+.feature-card i {
+    background: linear-gradient(135deg, #0d6efd, #6f42c1); /* Example gradient */
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+     margin-bottom: 1rem; /* Space below icon */
+}
+
+
+/* Future Section */
+#future i {
+    transition: transform 0.3s ease;
+}
+#future .col-md-3:hover i {
+    transform: scale(1.2) rotate(5deg);
+}
+
+.highlight-dark {
+     color: #0dcaf0; /* Bootstrap info color - stands out on dark */
+}
+
+/* Call to Action / GitHub Section */
+.bg-gradient-primary-secondary {
+    background: linear-gradient(135deg, #0d6efd 0%, #6f42c1 100%); /* Example gradient */
+}
+
+/* Footer */
+footer small {
+    font-size: 0.85em;
+}
+
+/* Navbar Customization */
+.navbar {
+    transition: background-color 0.3s ease;
+}
+
+.navbar .nav-link.btn {
+    margin-top: 0.25rem; /* Align button slightly better */
+    margin-bottom: 0.25rem;
+}

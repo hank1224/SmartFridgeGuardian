@@ -2,7 +2,7 @@
 
 A project leveraging IoT, Fog Computing, and Cloud technologies to create a smarter shared refrigerator experience, aiming to reduce food waste and prevent item misappropriation in shared environments like dorms or offices.
 
-**Check out for our Proposal: [PDF file here](./static/Cloud_and_Fog_Midterm.pdf)**
+**Check out our Proposal: [Canva](https://www.canva.com/design/DAGj9VkcseQ/b5yoc1Te6HAapWB0cU6A4Q/edit?utm_content=DAGj9VkcseQ&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)**
 
 **Web Introduction: [GitHub Pages](https://hank1224.github.io/SmartFridgeGuardian/)**
 

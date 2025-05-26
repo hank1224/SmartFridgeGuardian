@@ -4,41 +4,53 @@
 #include <WiFi.h>
 #include <esp_camera.h>
 
-// 攝像頭引腳定義，根據選擇的 CAMERA_MODEL 自動包含
+// 鏡頭引腳定義，根據選擇的 CAMERA_MODEL 自動包含
 // 這裡我們明確使用 CAMERA_MODEL_AI_THINKER
 #define CAMERA_MODEL_AI_THINKER // AI-Thinker ESP32-CAM 模組 (有 PSRAM)
 #include "camera_pins.h"
 
 // 自定義模組的頭文件
-#include "app_httpd.h"  // 攝像頭 HTTP 伺服器功能
+#include "app_httpd.h"  // 鏡頭 HTTP 伺服器功能
 #include "aws_upload.h" // AWS 上傳功能接口
+
+// 新增：NTP 時間同步相關庫
+#include <time.h>        // For time functions (time_t, struct tm, time, localtime_r, strftime)
+#include "esp_sntp.h"    // For NTP client
 
 // ===========================
 // WiFi 連接設定
 // ===========================
-const char *const WIFI_SSID = "YOUR_WIFI_SSID";         // Wi-Fi 名稱
-const char *const WIFI_PASSWORD = "YOUR_WIFI_PASSWORD"; // Wi-Fi 密碼
+const char *const WIFI_SSID = "WIFI_SSID";         // 您的 Wi-Fi 名稱
+const char *const WIFI_PASSWORD = "WIFI_PASSWORD"; // 您的 Wi-Fi 密碼
 
 // ===========================
 // 全局常數和配置
 // ===========================
-// 攝像頭配置參數的預設值
+// 鏡頭配置參數的預設值
 const int CAMERA_XCLK_FREQ_HZ = 20000000;    // XCLK 時鐘頻率 20 MHz
 const framesize_t CAMERA_FRAME_SIZE_DEFAULT = FRAMESIZE_UXGA; // 預設幀大小 UXGA (1600x1200)
 const framesize_t CAMERA_FRAME_SIZE_NO_PSRAM = FRAMESIZE_SVGA; // 無 PSRAM 時的幀大小 SVGA (800x600)
 const framesize_t CAMERA_FRAME_SIZE_INITIAL_STREAM = FRAMESIZE_QVGA; // 初始串流幀大小 QVGA (320x240)
 const pixformat_t CAMERA_PIXEL_FORMAT = PIXFORMAT_JPEG; // 像素格式 JPEG (適合串流)
-const int JPEG_QUALITY_DEFAULT = 12;         // 預設 JPEG 壓縮質量 (0-63, 越低質量越好/檔案越大)
-const int PSRAM_JPEG_QUALITY = 10;           // 有 PSRAM 時的 JPEG 壓縮質量
+const int JPEG_QUALITY_DEFAULT = 12;         // 預設 JPEG 壓縮品質 (0-63, 越低品質越好/檔案越大)
+const int PSRAM_JPEG_QUALITY = 10;           // 有 PSRAM 時的 JPEG 壓縮品質
 const int FB_COUNT_DEFAULT = 1;              // 預設幀緩衝區數量
 const int FB_COUNT_PSRAM = 2;                // 有 PSRAM 時的幀緩衝區數量
 
 // ===========================
+// NTP 時間同步設定
+// ===========================
+const char* NTP_SERVER1 = "pool.ntp.org";
+const char* NTP_SERVER2 = "time.nist.gov";
+const char* TZ_INFO = "CST-8"; // 台灣時區 (Central Standard Time -8, 無日光節約時間調整)
+
+// ===========================
 // 函數原型 (為增強可讀性而拆分出的配置函數)
 // ===========================
-static esp_err_t configureCamera(camera_config_t &config); // 配置攝像頭參數
-static void initializeCameraSensor(sensor_t *s);          // 初始化攝像頭傳感器設置
+static esp_err_t configureCamera(camera_config_t &config); // 配置鏡頭參數
+static void initializeCameraSensor(sensor_t *s);          // 初始化鏡頭傳感器設置
 static void connectToWiFi();                              // 連接 WiFi 網絡
+static void initTimeSync();                               // 新增：初始化 NTP 時間同步
 
 // ===========================
 // setup() 函數：程式初始化
@@ -49,23 +61,23 @@ void setup() {
   Serial.setDebugOutput(true);
   Serial.println("\n--- ESP32 Camera Web Server 啟動中 ---");
 
-  // 1. 配置攝像頭參數
+  // 1. 配置鏡頭參數
   camera_config_t cameraConfig;
   if (configureCamera(cameraConfig) != ESP_OK) {
-    Serial.println("[Camera] 攝像頭配置失敗！");
+    Serial.println("[Camera] 鏡頭配置失敗！");
     return; // 終止程式執行
   }
 
-  // 2. 初始化攝像頭
-  Serial.print("[Camera] 正在初始化攝像頭...");
+  // 2. 初始化鏡頭
+  Serial.print("[Camera] 正在初始化鏡頭...");
   esp_err_t err = esp_camera_init(&cameraConfig);
   if (err != ESP_OK) {
-    Serial.printf("[Camera] 攝像頭初始化失敗，錯誤碼：0x%x\n", err);
+    Serial.printf("[Camera] 鏡頭初始化失敗，錯誤碼：0x%x\n", err);
     return; // 終止程式執行
   }
   Serial.println("成功！");
 
-  // 3. 調整攝像頭傳感器設置 (如翻轉、亮度等)
+  // 3. 調整鏡頭傳感器設置 (如翻轉、亮度等)
   initializeCameraSensor(esp_camera_sensor_get());
 
   // 4. 初始化 LED 閃光燈引腳 (如果已定義)
@@ -76,13 +88,16 @@ void setup() {
   // 5. 連接 WiFi
   connectToWiFi();
 
-  // 6. 啟動 HTTP 攝像頭伺服器
+  // 6. 初始化 NTP 時間同步 (在WiFi連接後執行)
+  initTimeSync();
+
+  // 7. 啟動 HTTP 鏡頭伺服器
   startCameraServer();
 
-  // 7. 執行 AWS 上傳服務的初始化 (預留接口)
+  // 8. 執行 AWS 上傳服務的初始化 (預留接口)
   aws_upload_setup();
 
-  Serial.printf("[Server] 攝像頭伺服器已就緒！請使用 'http://%s:%d' 連接\n",
+  Serial.printf("[Server] 鏡頭伺服器已就緒！請使用 'http://%s:%d' 連接\n",
                 WiFi.localIP().toString().c_str(), HTTP_SERVER_PORT);
 }
 
@@ -102,7 +117,7 @@ void loop() {
     }
     if (WiFi.status() == WL_CONNECTED) {
       Serial.println("\n[WiFi] 重新連線成功！");
-      Serial.printf("[Server] 攝像頭伺服器再次就緒！請使用 'http://%s:%d' 連接\n",
+      Serial.printf("[Server] 鏡頭伺服器再次就緒！請使用 'http://%s:%d' 連接\n",
                     WiFi.localIP().toString().c_str(), HTTP_SERVER_PORT);
     } else {
       Serial.println("\n[WiFi] 重新連線失敗，請檢查 Wi-Fi 設置或重啟裝置。");
@@ -116,7 +131,7 @@ void loop() {
 // ===========================
 
 /**
- * @brief 配置攝像頭初始化參數。
+ * @brief 配置鏡頭初始化參數。
  *
  * @param config camera_config_t 結構體引用，將被填寫。
  * @return esp_err_t 返回 ESP_OK 表示成功，否則為錯誤碼。
@@ -153,7 +168,7 @@ static esp_err_t configureCamera(camera_config_t &config) {
   config.pin_pwdn = PWDN_GPIO_NUM;
   config.pin_reset = RESET_GPIO_NUM;
 
-  // 攝像頭工作頻率
+  // 鏡頭工作頻率
   config.xclk_freq_hz = CAMERA_XCLK_FREQ_HZ;
 
   // 幀緩衝區設定
@@ -167,7 +182,7 @@ static esp_err_t configureCamera(camera_config_t &config) {
   if (config.pixel_format == PIXFORMAT_JPEG) {
     if (psramFound()) {
       Serial.println("[Camera] 檢測到 PSRAM，使用更多幀緩衝區和更高品質。");
-      config.jpeg_quality = PSRAM_JPEG_QUALITY; // 提高 JPEG 質量
+      config.jpeg_quality = PSRAM_JPEG_QUALITY; // 提高 JPEG 品質
       config.fb_count = FB_COUNT_PSRAM;         // 增加幀緩衝區數量以提高串流流暢度
       config.grab_mode = CAMERA_GRAB_LATEST;    // 抓取最新幀以減少延遲
     } else {
@@ -187,7 +202,7 @@ static esp_err_t configureCamera(camera_config_t &config) {
 }
 
 /**
- * @brief 調整攝像頭傳感器的圖像參數。
+ * @brief 調整鏡頭傳感器的圖像參數。
  *
  * @param s 指向 sensor_t 結構體的指針。
  */
@@ -235,4 +250,48 @@ static void connectToWiFi() {
   Serial.println("\n[WiFi] 連接成功！");
   Serial.print("[WiFi] IP 地址: ");
   Serial.println(WiFi.localIP());
+}
+
+/**
+ * @brief 初始化 NTP 時間同步。
+ */
+static void initTimeSync() {
+  Serial.println("[NTP] 正在初始化時間同步...");
+  configTime(0, 0, NTP_SERVER1, NTP_SERVER2);
+  
+  setenv("TZ", TZ_INFO, 1);
+  tzset();
+
+  long startWaiting = millis();
+  time_t now;
+  struct tm timeinfo;
+  bool timeSynced = false;
+
+  // 等待時間同步完成，同時檢查 sntp_get_sync_status() 或 getLocalTime()
+  while (millis() - startWaiting < 30000) { // 最多等待30秒
+    Serial.print(".");
+    delay(500);
+
+    // 檢查 sntp_get_sync_status() 是否為 COMPLETED (可能短暫出現)
+    if (sntp_get_sync_status() == SNTP_SYNC_STATUS_COMPLETED) {
+      timeSynced = true;
+      break; // 立即跳出，表示同步成功
+    }
+
+    // 嘗試獲取本地時間，如果成功表示時間已同步
+    if (getLocalTime(&timeinfo)) {
+      timeSynced = true;
+      break; // 立即跳出，表示同步成功
+    }
+  }
+
+  if (timeSynced) {
+    Serial.println("\n[NTP] 時間同步成功！");
+    // 再次獲取時間，確保是最新的
+    time(&now);
+    localtime_r(&now, &timeinfo);
+    Serial.printf("[NTP] 當前時間: %s", asctime(&timeinfo));
+  } else {
+    Serial.println("\n[NTP] 時間同步失敗或超時。時間可能不準確。");
+  }
 }

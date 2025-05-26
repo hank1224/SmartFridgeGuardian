@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}物品清單 - 公共冰箱倉儲管理系統{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1>物品清單</h1>
+        <a href="{% url 'inventory:add' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> 添加物品
+        </a>
+    </div>
+
+    {% if messages %}
+    <div class="messages mt-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <div class="row row-cols-1 row-cols-md-3 g-4 mt-3">
+        {% for item in items %}
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ item.name }}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">{{ item.quantity }}</h6>
+                    <p class="card-text">
+                        {{ item.estimated_expiry_info }}
+                    </p>
+                    <p class="card-text">
+                        <small class="text-muted">
+                            放置日期：{{ item.placement_date|date:"Y-m-d" }}<br>
+                            擁有者：{{ item.owner.username }}
+                        </small>
+                    </p>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="btn-group w-100">
+                        <a href="{% url 'inventory:detail' item.id %}" class="btn btn-outline-primary">詳情</a>
+                        <a href="{% url 'inventory:edit' item.id %}" class="btn btn-outline-secondary">編輯</a>
+                        <a href="{% url 'inventory:delete' item.id %}" class="btn btn-outline-danger">刪除</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                目前還沒有物品記錄。
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

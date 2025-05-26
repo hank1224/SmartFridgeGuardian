@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}{% if form.instance.id %}編輯物品{% else %}添加物品{% endif %} - 公共冰箱倉儲管理系統{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'inventory:list' %}">物品清單</a></li>
+            <li class="breadcrumb-item active">{% if form.instance.id %}編輯物品{% else %}添加物品{% endif %}</li>
+        </ol>
+    </nav>
+
+    <div class="card">
+        <div class="card-body">
+            <h1 class="card-title">{% if form.instance.id %}編輯物品{% else %}添加物品{% endif %}</h1>
+            
+            <form method="post" class="mt-4">
+                {% csrf_token %}
+                
+                {% for field in form %}
+                <div class="mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                    <div class="form-text">{{ field.help_text }}</div>
+                    {% endif %}
+                    {% if field.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ field.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">保存</button>
+                    <a href="{% url 'inventory:list' %}" class="btn btn-secondary">取消</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

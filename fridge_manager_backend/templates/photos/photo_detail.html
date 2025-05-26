@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}照片詳情 - 公共冰箱倉儲管理系統{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'photos:list' %}">照片記錄</a></li>
+            <li class="breadcrumb-item active">照片詳情</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <img src="{{ photo.image.url }}" class="card-img-top" alt="冰箱照片">
+                <div class="card-body">
+                    <h5 class="card-title">{{ photo.fridge_device.name }}</h5>
+                    <p class="card-text">
+                        <small class="text-muted">
+                            拍攝時間：{{ photo.uploaded_at|date:"Y-m-d H:i" }}<br>
+                            拍攝者：{{ photo.uploaded_by.username }}<br>
+                            狀態：{{ photo.get_recognition_status_display }}
+                        </small>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">識別出的物品</h5>
+                </div>
+                <div class="card-body">
+                    {% if items %}
+                        <div class="list-group">
+                            {% for item in items %}
+                            <a href="{% url 'inventory:detail' item.id %}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ item.name }}</h6>
+                                    <small>{{ item.quantity }}</small>
+                                </div>
+                                <p class="mb-1">{{ item.estimated_expiry_info }}</p>
+                                <small>擁有者：{{ item.owner.username }}</small>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            目前還沒有識別出任何物品。
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

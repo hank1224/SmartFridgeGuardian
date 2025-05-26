@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}照片記錄 - 公共冰箱倉儲管理系統{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>照片記錄</h1>
+    
+    <div class="row row-cols-1 row-cols-md-3 g-4 mt-3">
+        {% for photo in photos %}
+        <div class="col">
+            <div class="card h-100">
+                <img src="{{ photo.image.url }}" class="card-img-top" alt="冰箱照片" style="height: 200px; object-fit: cover;">
+                <div class="card-body">
+                    <h5 class="card-title">{{ photo.fridge_device.name }}</h5>
+                    <p class="card-text">
+                        <small class="text-muted">
+                            拍攝時間：{{ photo.uploaded_at|date:"Y-m-d H:i" }}<br>
+                            拍攝者：{{ photo.uploaded_by.username }}<br>
+                            狀態：{{ photo.get_recognition_status_display }}
+                        </small>
+                    </p>
+                    <a href="{% url 'photos:detail' photo.id %}" class="btn btn-primary">查看詳情</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                目前還沒有照片記錄。
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

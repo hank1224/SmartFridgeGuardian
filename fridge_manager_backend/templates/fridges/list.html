@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}冰箱列表 - 公共冰箱倉儲管理系統{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>冰箱設備列表</h1>
+    
+    <div class="row mt-4">
+        {% for fridge in fridges %}
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ fridge.name }}</h5>
+                    <p class="card-text">
+                        <strong>設備 ID:</strong> {{ fridge.device_id_esp }}<br>
+                        <strong>位置:</strong> {{ fridge.location }}<br>
+                        <strong>狀態:</strong> {{ fridge.get_status_display }}
+                    </p>
+                    <a href="#" class="btn btn-primary">查看詳情</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                目前沒有註冊的冰箱設備。
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # web:
+  #   build: .
+  #   command: python manage.py runserver 0.0.0.0:8000
+  #   volumes:
+  #     - .:/app
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     - DJANGO_SETTINGS_MODULE=fridge_manager.settings
+  #     - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+  #     - DJANGO_DEBUG=True
+  #     - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
+  #     - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+  #     - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+  #     - AWS_STORAGE_BUCKET_NAME=${AWS_STORAGE_BUCKET_NAME}
+  #     - AWS_S3_REGION_NAME=${AWS_S3_REGION_NAME}
+  #     - AWS_S3_CUSTOM_DOMAIN=${AWS_S3_CUSTOM_DOMAIN}
+  #     - OPENAI_API_KEY=${OPENAI_API_KEY}
+  #     - OPENAI_API_MODEL=${OPENAI_API_MODEL:-gpt-4-vision-preview}
+  #     - OPENAI_API_TIMEOUT=${OPENAI_API_TIMEOUT:-30}
+  #     - DATABASE_URL=postgres://postgres:postgres@db:5432/fridge_manager
+  #     - CELERY_BROKER_URL=redis://redis:6379/0
+  #     - CELERY_RESULT_BACKEND=redis://redis:6379/0
+  #   depends_on:
+  #     - db
+  #     - redis
+
+  # celery:
+  #   build: .
+  #   command: celery -A fridge_manager worker -l info
+  #   volumes:
+  #     - .:/app
+  #   environment:
+  #     - DJANGO_SETTINGS_MODULE=fridge_manager.settings
+  #     - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+  #     - DJANGO_DEBUG=True
+  #     - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
+  #     - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+  #     - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+  #     - AWS_STORAGE_BUCKET_NAME=${AWS_STORAGE_BUCKET_NAME}
+  #     - AWS_S3_REGION_NAME=${AWS_S3_REGION_NAME}
+  #     - AWS_S3_CUSTOM_DOMAIN=${AWS_S3_CUSTOM_DOMAIN}
+  #     - OPENAI_API_KEY=${OPENAI_API_KEY}
+  #     - OPENAI_API_MODEL=${OPENAI_API_MODEL:-gpt-4-vision-preview}
+  #     - OPENAI_API_TIMEOUT=${OPENAI_API_TIMEOUT:-30}
+  #     - DATABASE_URL=postgres://postgres:postgres@db:5432/fridge_manager
+  #     - CELERY_BROKER_URL=redis://redis:6379/0
+  #     - CELERY_RESULT_BACKEND=redis://redis:6379/0
+  #   depends_on:
+  #     - db
+  #     - redis
+
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=fridge_manager
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data: 

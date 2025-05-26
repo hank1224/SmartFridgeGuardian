@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}物品詳情 - 公共冰箱倉儲管理系統{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'inventory:list' %}">物品清單</a></li>
+            <li class="breadcrumb-item active">物品詳情</li>
+        </ol>
+    </nav>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h1 class="card-title">{{ item.name }}</h1>
+                    <h6 class="card-subtitle mb-3 text-muted">{{ item.quantity }}</h6>
+                </div>
+                <div class="btn-group">
+                    <a href="{% url 'inventory:edit' item.id %}" class="btn btn-outline-primary">編輯</a>
+                    <a href="{% url 'inventory:delete' item.id %}" class="btn btn-outline-danger">刪除</a>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h5>基本信息</h5>
+                    <table class="table">
+                        <tr>
+                            <th>擁有者</th>
+                            <td>{{ item.owner.username }}</td>
+                        </tr>
+                        <tr>
+                            <th>放置日期</th>
+                            <td>{{ item.placement_date|date:"Y-m-d" }}</td>
+                        </tr>
+                        <tr>
+                            <th>添加時間</th>
+                            <td>{{ item.added_at|date:"Y-m-d H:i" }}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h5>預估保質期</h5>
+                    <p>{{ item.estimated_expiry_info }}</p>
+                </div>
+            </div>
+
+            {% if item.notes %}
+            <div class="mt-4">
+                <h5>備註</h5>
+                <p>{{ item.notes }}</p>
+            </div>
+            {% endif %}
+
+            {% if item.photo %}
+            <div class="mt-4">
+                <h5>來源照片</h5>
+                <a href="{% url 'photos:detail' item.photo.id %}" class="btn btn-outline-secondary">
+                    查看照片
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

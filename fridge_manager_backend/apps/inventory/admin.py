@@ -1,5 +1,7 @@
 from django.contrib import admin
+
 from .models import RecognizedItem
+
 
 @admin.register(RecognizedItem)
 class RecognizedItemAdmin(admin.ModelAdmin):

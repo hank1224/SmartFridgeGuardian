@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}操作狀態{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">操作狀態</h1>
+    {% if status == 'success' %}
+        <div class="alert alert-success">
+            <h5>操作成功</h5>
+            <p>{{ message }}</p>
+        </div>
+    {% else %}
+        <div class="alert alert-danger">
+            <h5>操作失敗</h5>
+            <p>{{ message }}</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 

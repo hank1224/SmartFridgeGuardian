@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}選擇操作 - {{ fridge.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">選擇操作 - {{ fridge.name }}</h1>
+    
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">冰箱信息</h5>
+            <p class="card-text">{{ fridge.location_description|default:"無位置描述" }}</p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">放入物品</h5>
+                    <p class="card-text">將物品放入冰箱，系統會自動拍照並記錄。</p>
+                    <button class="btn btn-primary" onclick="openFridge('put_in')">
+                        放入物品
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">取出物品</h5>
+                    <p class="card-text">從冰箱取出物品，系統會自動拍照並記錄。</p>
+                    <button class="btn btn-primary" onclick="openFridge('take_out')">
+                        取出物品
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 操作狀態模態框 -->
+<div class="modal fade" id="operationStatusModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">操作狀態</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="operationStatus"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openFridge(operationType) {
+    const modal = new bootstrap.Modal(document.getElementById('operationStatusModal'));
+    const statusDiv = document.getElementById('operationStatus');
+    
+    // 顯示載入中狀態
+    statusDiv.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"></div><p class="mt-2">正在處理...</p></div>';
+    modal.show();
+    
+    // 發送請求
+    fetch(`{% url 'fridges:user_open_fridge' fridge.device_id_esp %}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: `operation_type=${operationType}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            statusDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <h5>操作成功</h5>
+                    <p>${data.message}</p>
+                </div>
+            `;
+        } else {
+            statusDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <h5>操作失敗</h5>
+                    <p>${data.message}</p>
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        statusDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <h5>操作失敗</h5>
+                <p>發生錯誤：${error.message}</p>
+            </div>
+        `;
+    });
+}
+
+// 獲取 CSRF Token 的輔助函數
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %} 

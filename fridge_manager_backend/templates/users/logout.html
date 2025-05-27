@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}登出 - 智慧冰箱管理系統{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">登出成功</h4>
+                </div>
+                <div class="card-body">
+                    <p class="mb-4">您已成功登出系統。</p>
+                    <div class="d-grid">
+                        <a href="{% url 'users:login' %}" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt"></i> 重新登入
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,38 +1,100 @@
 {% extends "base.html" %}
 
-{% block title %}首頁 - 公共冰箱倉儲管理系統{% endblock %}
+{% block title %}智慧冰箱管理系統{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <h1>歡迎使用公共冰箱倉儲管理系統</h1>
-    <div class="row mt-4">
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">冰箱管理</h5>
-                    <p class="card-text">查看和管理所有冰箱設備。</p>
-                    <a href="{% url 'fridges:list' %}" class="btn btn-primary">查看冰箱</a>
+    <h1 class="mb-4">智慧冰箱管理系統</h1>
+    
+    {% if user.is_authenticated %}
+        <div class="row">
+            <!-- 用戶操作區 -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">用戶操作</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-3">冰箱操作</h6>
+                        <ul class="list-group list-group-flush mb-3">
+                            <li class="list-group-item">
+                                <a href="{% url 'fridges:user_select_fridge' %}" class="text-decoration-none">
+                                    <i class="fas fa-refrigerator"></i> 選擇冰箱並操作
+                                </a>
+                                <small class="text-muted d-block">選擇冰箱，進行放入或取出物品的操作</small>
+                            </li>
+                        </ul>
+                        
+                        <h6 class="card-subtitle mb-3">物品管理</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <a href="{% url 'inventory:user_items' %}" class="text-decoration-none">
+                                    <i class="fas fa-box"></i> 我的物品
+                                </a>
+                                <small class="text-muted d-block">查看您放入冰箱的所有物品</small>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">物品清單</h5>
-                    <p class="card-text">查看所有已識別的物品。</p>
-                    <a href="{% url 'inventory:list' %}" class="btn btn-primary">查看物品</a>
+            
+            <!-- 管理功能區 -->
+            {% if user.is_staff %}
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">管理功能</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-3">冰箱管理</h6>
+                        <ul class="list-group list-group-flush mb-3">
+                            <li class="list-group-item">
+                                <a href="{% url 'fridges:list' %}" class="text-decoration-none">
+                                    <i class="fas fa-list"></i> 冰箱列表
+                                </a>
+                                <small class="text-muted d-block">管理所有冰箱設備</small>
+                            </li>
+                        </ul>
+                        
+                        <h6 class="card-subtitle mb-3">物品管理</h6>
+                        <ul class="list-group list-group-flush mb-3">
+                            <li class="list-group-item">
+                                <a href="{% url 'inventory:list' %}" class="text-decoration-none">
+                                    <i class="fas fa-boxes"></i> 所有物品
+                                </a>
+                                <small class="text-muted d-block">查看所有冰箱中的物品</small>
+                            </li>
+                            <li class="list-group-item">
+                                <a href="{% url 'inventory:add' %}" class="text-decoration-none">
+                                    <i class="fas fa-plus"></i> 添加物品
+                                </a>
+                                <small class="text-muted d-block">手動添加物品到系統</small>
+                            </li>
+                        </ul>
+                        
+                        <h6 class="card-subtitle mb-3">照片管理</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <a href="{% url 'photos:list' %}" class="text-decoration-none">
+                                    <i class="fas fa-camera"></i> 照片列表
+                                </a>
+                                <small class="text-muted d-block">查看所有冰箱拍攝的照片</small>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
+            {% endif %}
         </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">照片記錄</h5>
-                    <p class="card-text">查看所有拍攝的照片。</p>
-                    <a href="{% url 'photos:list' %}" class="btn btn-primary">查看照片</a>
-                </div>
-            </div>
+    {% else %}
+        <div class="alert alert-info">
+            <h4 class="alert-heading">歡迎使用智慧冰箱管理系統</h4>
+            <p>請先登入以使用系統功能。</p>
+            <hr>
+            <p class="mb-0">
+                <a href="{% url 'users:login' %}" class="btn btn-primary">登入</a>
+            </p>
         </div>
-    </div>
+    {% endif %}
 </div>
 {% endblock %} 

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}選擇冰箱{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">選擇冰箱</h1>
+    
+    {% if fridges %}
+        <div class="row">
+            {% for fridge in fridges %}
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ fridge.name }}</h5>
+                            <p class="card-text">{{ fridge.location_description|default:"無位置描述" }}</p>
+                            <a href="{% url 'fridges:user_select_operation' fridge.device_id_esp %}" class="btn btn-primary">
+                                選擇此冰箱
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            目前沒有可用的冰箱設備。
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}我的冰箱物品{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">我的冰箱物品</h1>
+    {% if items %}
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>物品名稱</th>
+                    <th>數量</th>
+                    <th>冰箱</th>
+                    <th>放入日期</th>
+                    <th>備註</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.photo.fridge_device.name }}</td>
+                    <td>{{ item.placement_date }}</td>
+                    <td>{{ item.notes|default:"-" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-info">目前沒有記錄到您的物品。</div>
+    {% endif %}
+</div>
+{% endblock %} 

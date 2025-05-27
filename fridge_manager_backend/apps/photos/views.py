@@ -1,6 +1,8 @@
-from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, render
+
 from .models import Photo
+
 
 @login_required
 def photo_list(request):

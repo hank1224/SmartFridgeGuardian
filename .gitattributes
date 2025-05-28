@@ -1,1 +1,22 @@
-* eol=lf
+# 對所有檔案自動偵測是文字還是二進位，並對文字檔案進行LF標準化
+* text=auto
+
+# 明確標記常見的二進位檔案類型為 binary，阻止 Git 進行任何文字處理
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.gif binary
+*.pdf binary
+*.doc binary
+*.docx binary
+*.xls binary
+*.xlsx binary
+*.ppt binary
+*.pptx binary
+
+# 如果您需要特定的文字檔案類型強制使用 LF (例如 shell scripts)
+*.sh text eol=lf
+*.py text eol=lf
+*.txt text eol=lf
+*.csv text eol=lf
+*.md text eol=lf

@@ -1,4 +1,4 @@
-# 專案規格書：公共冰箱倉儲管理系統
+# Backend 規格書
 
 **目錄：**
 
@@ -23,11 +23,16 @@
 
 「公共冰箱倉儲管理系統」旨在利用物聯網 (IoT) 攝影機和人工智慧 (AI) 圖像識別技術，為共享或公共冰箱提供一個智能化的物品管理解決方案。系統允許使用者在放入物品時自動拍照並識別內容，追蹤物品的存放者和時間，並提供一個介面供使用者查詢冰箱內容和個人存放的物品。
 
+**系統設計上支持兩種主要的圖像採集與上傳機制，以提供部署彈性和滿足不同場景需求：**
+
+*   **機制一 (ESP32 主動推送)：** ESP32-CAM 攝影機在觸發後，主動將拍攝的圖像數據推送至雲端 API 接口，由雲端服務處理後存儲至 AWS S3。這種模式適合邊緣裝置有直接上網能力且需要簡化後端數據接收的場景。
+*   **機制二 (後端主動拉取)：** 後端系統在接收到使用者操作指令後，主動向 ESP32-CAM 發送拍照請求，獲取圖像數據後由後端系統負責上傳至 AWS S3。這種模式適合後端對裝置有直接控制權，且需要後端集中處理圖像數據的場景。
+
 **專案目標 (概念驗證 PoC 階段)：**
 
-*   建立一個 Django 後端系統，能夠與 ESP32-CAM 攝影機模組整合。
+*   建立一個 Django 後端系統，能夠與 ESP32-CAM 攝影機模組整合，並支持上述兩種圖像上傳機制（或至少實現其中一種的主要流程並為另一種預留接口）。
 *   實現使用者透過網頁介面操作冰箱（放入/取出物品），並在操作時觸發攝影機拍照。
-*   將拍攝的照片上傳至雲端儲存 (AWS S3)。
+*   將拍攝的照片上傳至雲端儲存 (AWS S3)，無論是通過 ESP32 直接推送路徑還是後端拉取路徑。
 *   調用大型語言模型 (LLM) API (如 OpenAI 格式的 API) 對照片內容進行分析，識別物品、數量及推測保質期。
 *   將識別結果與操作用戶關聯，並存儲於資料庫。
 *   提供介面供系統管理員管理冰箱設備。
@@ -40,54 +45,40 @@
 本系統定義了兩種主要的使用者角色：
 
 *   **2.1. 系統管理員 (Admin):**
-    *   **權限：**
-        *   登入管理後台。
-        *   註冊、查看、編輯和刪除冰箱設備 (ESP32-CAM) 的配置信息（如名稱、IP 地址）。
-        *   查看所有冰箱的操作日誌和拍攝的照片。
-        *   查看所有使用者存放的物品記錄。
-        *   (未來可能) 管理使用者帳戶。
+    *   **權限：** 登入管理後台；註冊、查看、編輯和刪除冰箱設備 (ESP32-CAM) 的配置訊息（如名稱、IP 地址）；查看所有冰箱的操作日誌和拍攝的照片；查看所有使用者存放的物品記錄；(未來可能) 管理使用者帳戶。
     *   **介面：** 主要通過 Django Admin 後台或特定的管理員網頁介面進行操作。
 
 *   **2.2. 冰箱使用者 (User):**
-    *   **權限：**
-        *   註冊和登入系統。
-        *   瀏覽可用的公共冰箱列表。
-        *   選擇特定冰箱進行操作（放入物品、取出物品）。
-        *   操作冰箱時，系統會自動記錄其身份並拍攝照片。
-        *   查看自己放入冰箱的物品列表及其詳情（物品名稱、數量、放入時間、預估保質期）。
-        *   查看特定冰箱當前（基於最新照片分析的）大致內容。
+    *   **權限：** 註冊和登入系統；瀏覽可用的公共冰箱列表；選擇特定冰箱進行操作（放入物品、取出物品）；操作冰箱時，系統會自動記錄其身份並觸發拍照流程；查看自己放入冰箱的物品列表及其詳情（物品名稱、數量、放入時間、預估保質期）；查看特定冰箱當前（基於最新照片分析的）大致內容。
     *   **介面：** 主要通過系統的前端網頁介面進行操作。
 
 ---
 
 **3. 系統核心功能**
 
-*   **3.1. 使用者管理與認證：**
-    *   使用者註冊、登入、登出功能。
-    *   基於角色的訪問控制。
+*   **3.1. 使用者管理與認證：** 提供使用者註冊、登入、登出功能，並實施基於角色的訪問控制。
 
-*   **3.2. 冰箱設備管理 (管理員)：**
-    *   新增冰箱設備，需手動配置設備 ID (來自 ESP32-CAM)、IP 地址和端口。
-    *   編輯和查看已註冊的冰箱設備信息。
+*   **3.2. 冰箱設備管理 (管理員)：** 允許管理員新增冰箱設備，需配置設備 ID (來自 ESP32-CAM)、IP 地址和端口等訊息；提供編輯和查看已註冊冰箱設備的功能。
 
 *   **3.3. 圖像採集與儲存：**
-    *   冰箱使用者操作冰箱（放入/取出）時，系統自動向指定的 ESP32-CAM 發送拍照指令。
-    *   ESP32-CAM 拍攝照片（JPEG 格式），將圖像數據進行 Base64 編碼後連同時間戳等元數據以 JSON 格式返回給 Django 後端。
-    *   Django 後端接收 Base64 數據，解碼後將圖片上傳至 AWS S3 進行持久化儲存。
+    *   冰箱使用者操作冰箱（放入/取出）時，系統會根據當前配置的模式觸發拍照流程。
+    *   **系統支持以下兩種圖像採集與儲存模式：**
+        *   **3.3.1. 模式一：ESP32 主動推送至雲端**
+            *   Django 後端接收到使用者操作請求並記錄操作後，（可選）可向 ESP32-CAM 發送觸發信號，並提供操作關聯 ID 和用戶標識符。
+            *   ESP32-CAM 接收到信號或根據自身邏輯（例如，門感應器觸發，此為未來擴展），拍攝照片（JPEG 格式），將圖像數據進行 Base64 編碼，連同時間戳、設備 ID 及後端提供的元數據，以 JSON 格式通過 HTTP POST 請求發送至雲端 API Gateway 端點，使用預配置的 API 金鑰進行認證。
+            *   API Gateway 接收請求並驗證金鑰後，觸發一個 AWS Lambda 函數。
+            *   AWS Lambda 函數負責：驗證請求的合法性、解碼 Base64 圖像數據、將圖像上傳至 AWS S3 指定路徑、並向 Django 後端系統發送通知（通過後端提供的回調 API 或消息隊列），傳遞 S3 圖像路徑、設備 ID、時間戳、操作關聯 ID 等訊息，以便後端創建 `Photo` 記錄並關聯正確的用戶和操作。
+        *   **3.3.2. 模式二：後端主動從 ESP32 拉取**
+            *   Django 後端接收到使用者操作請求並記錄操作後，系統自動向指定的 ESP32-CAM 的 HTTP 服務端點 (`/api/photos`) 發送拍照指令 (GET 請求)。
+            *   ESP32-CAM 接收到請求後，開啟閃光燈、拍照、關閉閃光燈，將圖像數據進行 Base64 編碼後連同時間戳、設備 ID 等元數據以 JSON 格式作為 HTTP 響應返回給 Django 後端。
+            *   Django 後端接收 Base64 數據，解碼後將圖片上傳至 AWS S3 進行持久化儲存，並創建 `Photo` 記錄。
+    *   **無論採用何種模式，Django 後端都會根據接收到的訊息創建一條 `Photo` 記錄，包含圖像元數據、S3 存儲位置、上傳用戶（通過請求用戶或傳來的用戶標識符確定）以及初始的識別狀態 (e.g., 'pending')。** 處理失敗會記錄錯誤。
 
-*   **3.4. 圖像內容識別 (AI/LLM)：**
-    *   圖片成功儲存後，系統異步調用 OpenAI 相容格式的 LLM API。
-    *   向 LLM 發送圖片數據和特定提示 (Prompt)，要求其識別圖片中的物品、數量及推測保質期，並以固定的 JSON 格式返回結果。
+*   **3.4. 圖像內容識別 (AI/LLM)：** 圖片成功儲存至 S3 且後端 `Photo` 記錄創建後，系統會觸發一個異步任務。該任務調用 OpenAI 相容格式的 LLM API，向其發送圖片數據和特定提示 (Prompt)，要求識別圖片中的物品、數量及推測保質期，並接收結構化的 JSON 結果。
 
-*   **3.5. 物品庫存追蹤：**
-    *   系統解析 LLM 返回的 JSON 結果。
-    *   為每個識別出的物品創建記錄，包含物品名稱、數量、預估保質期、放入日期以及**物品擁有者（即操作時登入的冰箱使用者）**。
-    *   所有物品記錄存儲在資料庫中，並與對應的照片和使用者關聯。
+*   **3.5. 物品庫存追蹤：** 系統解析 LLM 返回的 JSON 結果。為每個識別出的物品創建 `RecognizedItem` 記錄，包含物品名稱、數量、預估保質期、放入日期（基於照片時間戳）以及物品擁有者（即操作時登入的冰箱使用者）。所有物品記錄存儲在資料庫中，並與對應的照片和使用者關聯。
 
-*   **3.6. 使用者操作介面：**
-    *   提供清晰的網頁介面供冰箱使用者選擇冰箱、執行放入/取出操作。
-    *   顯示冰箱的當前內容概覽（基於最新分析的照片）。
-    *   允許使用者查看個人存放物品列表。
+*   **3.6. 使用者操作介面：** 提供清晰的網頁介面供冰箱使用者選擇冰箱、執行放入/取出操作。顯示冰箱的當前內容概覽（基於最新分析的照片），並允許使用者查看個人存放物品列表。
 
 ---
 
@@ -95,149 +86,72 @@
 
 **4.1. 系統管理員流程**
 
-*   **4.1.1. 註冊新冰箱設備：**
-    1.  管理員登入系統管理介面。
-    2.  導航至冰箱設備管理頁面。
-    3.  點擊 "新增冰箱" 按鈕。
-    4.  填寫冰箱表單：
-        *   冰箱名稱 (e.g., "三樓茶水間冰箱")
-        *   設備 ID (ESP32-CAM 內部設定的 ID, e.g., "fridge_1")
-        *   ESP32-CAM 的 IP 地址 (手動配置)
-        *   ESP32-CAM 的 HTTP 服務端口 (預設 `81`)
-        *   位置描述 (可選)
-    5.  提交表單，系統保存冰箱設備資訊。
+*   **4.1.1. 註冊新冰箱設備：** 管理員登入管理介面 -> 導航至冰箱設備管理頁面 -> 點擊 "新增冰箱" -> 填寫冰箱表單（名稱、設備 ID、IP 地址、端口、位置描述）-> 提交表單保存設備資訊。管理員也可能需要為 ESP32 裝置配置雲端 API Gateway 的端點和 API 金鑰（取決於模式一的實現）。
 
 **4.2. 冰箱使用者流程**
 
-*   **4.2.1. 登入系統：**
-    1.  使用者訪問系統登入頁面。
-    2.  輸入帳號密碼進行登入。
+*   **4.2.1. 登入系統：** 使用者訪問登入頁面 -> 輸入帳號密碼登入。
 
 *   **4.2.2. 放入物品到冰箱：**
-    1.  **選擇冰箱：**
-        *   登入後，使用者看到可用冰箱列表。
-        *   使用者點擊選擇一台目標冰箱。
-    2.  **選擇操作：**
-        *   系統顯示所選冰箱的資訊。
-        *   使用者點擊 "**放入物品**" 按鈕。
-    3.  **確認並"開啟"冰箱 (觸發拍照)：**
-        *   使用者可能會看到一個操作確認提示。
-        *   使用者點擊（虛擬的）"**開啟冰箱並拍照**" 按鈕。
-        *   前端向 Django 後端發送請求，包含所選 `fridge_id` 和 `operation_type='put_in'`。
-    4.  **後端處理與拍照：**
-        *   Django 後端驗證使用者身份。
-        *   (可選) 記錄操作日誌 (`FridgeOperationLog`)。
-        *   後端向對應 IP 地址的 ESP32-CAM 的 `/api/photos` 端點發送 `GET` 請求。
-        *   ESP32-CAM 開啟閃光燈、拍照、關閉閃光燈，返回包含 Base64 編碼圖像、時間戳等的 JSON 數據。
-    5.  **圖像處理與儲存：**
-        *   Django 後端接收到 JSON 數據。
-        *   若成功：
-            *   解碼 Base64 圖像數據。
-            *   創建 `Photo` 記錄，關聯 `FridgeDevice` 和操作使用者 (`uploaded_by = request.user`)。
-            *   將圖像上傳至 AWS S3。
-            *   `Photo` 記錄的 `recognition_status` 設為 'pending'。
-            *   保存 `Photo` 記錄。
-            *   向前端返回操作已記錄、正在處理的訊息。
-        *   若失敗（ESP32-CAM 無響應或返回錯誤）：
-            *   記錄錯誤，向前端返回失敗訊息。
-    6.  **使用者實際操作：**
-        *   使用者實際將物品放入冰箱。
-        *   使用者關閉網頁或離開該頁面（象徵冰箱門關閉）。
-    7.  **異步圖像分析 (Celery Task)：**
-        *   一個異步任務被觸發，處理該 `Photo` 記錄。
-        *   任務將 `Photo.recognition_status` 更新為 'processing'。
-        *   任務從 S3 獲取圖片，調用 `ImageRecognitionService` 將圖片發送給 LLM API 進行分析。
-        *   LLM API 返回分析結果 (JSON 格式的物品列表)。
-        *   任務解析結果，為每個識別出的物品創建 `RecognizedItem` 記錄：
-            *   `photo` = 關聯的 `Photo` 實例。
-            *   `name`, `quantity`, `estimated_expiry_info` = 來自 LLM。
-            *   `placement_date` = 物品放入日期 (基於照片時間戳)。
-            *   `owner` = `Photo.uploaded_by` (操作冰箱的登入使用者)。
-        *   保存 `RecognizedItem` 記錄。
-        *   更新 `Photo.recognition_status` 為 'completed' (或 'failed' 若分析失敗)。
-    8.  **查看結果：**
-        *   使用者後續可以在 "我的物品" 頁面或冰箱內容頁面看到新放入並被識別的物品。
+    1.  **選擇冰箱：** 登入後，使用者看到可用冰箱列表，點擊選擇目標冰箱。
+    2.  **選擇操作：** 系統顯示所選冰箱資訊，使用者點擊 "**放入物品**" 按鈕。
+    3.  **確認並觸發拍照：** 使用者點擊（虛擬的）"**開啟冰箱並拍照**" 按鈕。前端向 Django 後端發送請求，包含所選 `fridge_id`、`operation_type='put_in'` 和當前登入用戶訊息。
+    4.  **後端處理與拍照觸發：** Django 後端驗證使用者身份，可選記錄操作日誌。後端根據系統配置或冰箱設備的設定，執行選定的圖像採集模式：
+        *   **模式一 (ESP32 推送)：** 後端生成操作 ID 等訊息，通知 ESP32 拍照並推送數據至雲端。
+        *   **模式二 (後端拉取)：** 後端向指定 IP 的 ESP32 發送 HTTP GET 請求觸發拍照。
+    5.  **圖像處理與後端記錄：** 根據模式接收圖像數據或通知：
+        *   **模式一：** 後端接收 Lambda 發來的通知（包含 S3 路徑和元數據），創建 `Photo` 記錄，關聯用戶和冰箱，設置狀態為 'pending'。
+        *   **模式二：** 後端接收 ESP32 返回的 Base64 數據，解碼，上傳至 S3，創建 `Photo` 記錄，關聯用戶和冰箱，設置狀態為 'pending'。若與 ESP32 通訊失敗則返回錯誤。
+    6.  **使用者實際操作：** 使用者實際將物品放入冰箱並關閉冰箱門。
+    7.  **異步圖像分析：** 後端保存 `Photo` 記錄後，觸發 Celery 異步任務。任務更新狀態為 'processing'，從 S3 獲取圖片，調用 LLM API 進行分析，解析結果，創建 `RecognizedItem` 記錄（擁有者為操作用戶），保存記錄，更新 `Photo` 狀態為 'completed'/'failed'。
+    8.  **查看結果：** 使用者後續可在「我的物品」或冰箱內容頁面查看新加入並識別的物品。
 
-*   **4.2.3. 取出物品從冰箱 (PoC 簡化流程)：**
-    1.  **選擇冰箱與操作：** 同 "放入物品" 流程的步驟 1 和 2，但使用者點擊 "**取出物品**" 按鈕。
-    2.  **確認並"開啟"冰箱 (觸發拍照)：** 同 "放入物品" 流程的步驟 3，`operation_type='take_out'`。
-    3.  **後端處理與拍照：** 同 "放入物品" 流程的步驟 4。
-    4.  **圖像處理與儲存：** 同 "放入物品" 流程的步驟 5。新照片仍會被拍攝並儲存，`uploaded_by` 記錄操作者。
-    5.  **使用者實際操作：** 使用者實際從冰箱取出物品。
-    6.  **異步圖像分析 (Celery Task)：**
-        *   同 "放入物品" 流程的步驟 7。系統仍會分析新照片中的物品。
-        *   **PoC 注意：** 此階段，"取出物品" 操作主要目的是記錄一次冰箱門開啟事件和當時的快照。系統**不會**自動比較照片來判斷哪些物品被取出。識別出的物品仍會以新記錄（如果 LLM 依然識別到它們）的形式出現，並歸屬於操作者（這點在 "取出" 場景下可能不完全符合直覺，但這是 PoC 的簡化）。
-    7.  **查看結果：** 使用者操作被記錄。對庫存的實際影響追蹤是未來可優化的點。
+*   **4.2.3. 取出物品從冰箱 (PoC 簡化流程)：** 流程類似「放入物品」，使用者選擇冰箱和「取出物品」操作，系統觸發拍照和圖像分析流程。新照片仍會被拍攝、儲存並分析。在 PoC 階段，系統**不會**自動比較照片判斷取出了哪些物品，但會記錄此次操作和當時的冰箱快照，並將識別出的物品歸屬於操作者（即使是取出操作）。
 
-*   **4.2.4. 查看個人存放的物品：**
-    1.  使用者登入後，導航至 "我的物品" 頁面。
-    2.  系統顯示一個列表，包含該使用者 `owner` 的所有 `RecognizedItem`，可按冰箱分組或篩選。
+*   **4.2.4. 查看個人存放的物品：** 使用者登入後導航至「我的物品」頁面，系統顯示該使用者擁有（即曾放入）的物品列表。
 
-*   **4.2.5. 查看冰箱當前內容：**
-    1.  使用者選擇一台冰箱。
-    2.  系統展示該冰箱最新一張 `Photo` (且 `recognition_status='completed'`) 所分析出的 `RecognizedItem` 列表，作為冰箱當前內容的概覽。
+*   **4.2.5. 查看冰箱當前內容：** 使用者選擇一台冰箱，系統展示該冰箱最新一張成功分析的照片所識別出的物品列表，作為當前內容的概覽。
 
 ---
 
 **5. 系統架構**
 
-**5.1. 硬體整合 (ESP32-CAM 智慧攝影機)**
+*   **5.1. 硬體整合 (ESP32-CAM 智慧攝影機)**
+    *   **裝置：** ESP32-CAM AI-Thinker 模組 (核心晶片 ESP32-WROVER-B, OV2640 攝影機)。
+    *   **功能：** Wi-Fi 連接，內建 HTTP 伺服器 (用於模式二)，以及作為 HTTP 客戶端向上游 API Gateway 推送數據的能力 (用於模式一)。
+    *   **網路：** DHCP 獲取 IP，Django 後端需知道此 IP (用於模式二)。ESP32 需能訪問雲端 API Gateway 端點 (用於模式一)。
+    *   **API 接口：**
+        *   **模式一 (ESP32 作為客戶端調用雲端 API Gateway)：**
+            *   **端點：** `POST https://[API_GATEWAY_ID].execute-api.[REGION].amazonaws.com/[STAGE]/upload` (示例)
+            *   **認證：** HTTP Header 中包含 `x-api-key: [YOUR_API_KEY]`。
+            *   **請求體 (JSON)：** 包含 `device_id`, `timestamp_utc`, `image_base64`, `content_type`, 以及可選的 `operation_correlation_id` 和 `user_identifier`。
+            *   **響應：** 雲端 API Gateway 會返回標準 HTTP 狀態碼 (e.g., `202 Accepted`).
+        *   **模式二 (ESP32 作為伺服器被後端調用)：**
+            *   **端點：** `GET http://[ESP32_CAM_IP]:81/api/photos`
+            *   **請求：** 無參數。
+            *   **響應 (成功 `200 OK`)：** 包含 `id` (設備 ID), `timestamp`, `image_base64`, `content_type` 等 JSON 數據。
+            *   **響應 (失敗)：** 返回錯誤狀態碼和消息。
+    *   **拍照觸發：** 根據配置模式，由 Django 後端主動發送請求 (模式二) 或由後端信號觸發 ESP32 自行推送 (模式一)。
 
-*   **裝置：** ESP32-CAM AI-Thinker 模組 (核心晶片 ESP32-WROVER-B, OV2640 攝影機)。
-*   **功能：** Wi-Fi 連接，內建 HTTP 伺服器。
-*   **網路：** DHCP 獲取 IP，Django 後端需知道此 IP。HTTP 伺服器監聽端口 `81`。
-*   **API 接口 (由 ESP32-CAM 提供給 Django 調用)：**
-    *   **端點：** `GET http://[ESP32_CAM_IP]:81/api/photos`
-    *   **請求：** 無參數。
-    *   **響應 (成功 `200 OK`)：**
-        ```json
-        {
-          "id": "fridge_1", // 設備 ID
-          "timestamp": "2025-05-26T18:47:37Z", // UTC 時間戳 (ISO 8601)
-          "image_base64": "/9j/4AAQSkZJRgABAQAAAQA...", // Base64 編碼的 JPEG 圖像數據
-          "content_type": "image/jpeg" // 圖像 MIME 類型
-        }
-        ```
-    *   **響應 (失敗 `503 Service Unavailable`)：**
-        ```json
-        {
-          "status": "error",
-          "message": "Failed to get camera frame"
-        }
-        ```
-*   **拍照觸發：** 由 Django 後端主動發送 GET 請求觸發（拉取模型）。
+*   **5.2. 軟體架構 (Django 後端)**
+    *   **框架：** Django
+    *   **App 結構：** `project_name/` (專案配置), `apps/core/` (核心功能), `apps/users/` (使用者管理), `apps/fridges/` (冰箱設備管理), `apps/photos/` (照片元數據管理), `apps/inventory/` (物品庫存管理)。
+    *   **關鍵服務層：** `ESP32CamService` (封裝與 ESP32-CAM 通訊，支持模式二拉取和模式一信號發送), `ImageRecognitionService` (封裝與 LLM API 通訊), `CloudNotificationService` (處理來自 AWS Lambda 的通知並觸發後續流程 - 模式一)。
+    *   **異步任務：** 使用 Celery (配合 Redis 或 RabbitMQ 作為 Broker) 處理耗時的圖像分析任務。
 
-**5.2. 軟體架構 (Django 後端)**
+*   **5.3. 資料庫模型概覽 (主要模型)**
+    *   `User`: 存儲使用者帳號資訊。
+    *   `FridgeDevice`: 存儲冰箱設備配置訊息 (名稱, device\_id\_esp, ip\_address, port 等)。
+    *   `Photo`: 存儲照片元數據 (關聯 fridge\_device, image 文件路徑, timestamp\_esp, uploaded\_by, recognition\_status, raw\_llm\_response 等)。
+    *   `RecognizedItem`: 存儲 LLM 識別出的物品記錄 (關聯 photo, name, quantity, estimated\_expiry\_info, placement\_date, owner 等)。
+    *   `FridgeOperationLog` (可選): 記錄使用者在冰箱上的操作歷史。
 
-*   **框架：** Django
-*   **建議 App 結構：**
-    *   `project_name/`: 專案配置 (`settings.py`, `urls.py`, `celery.py`)
-    *   `apps/core/`: 核心功能、基礎模板、通用工具。
-    *   `apps/users/`: 使用者認證 (使用 Django 內建 User 模型)、個人資料。
-    *   `apps/fridges/`: 管理冰箱設備 (`FridgeDevice` 模型)、處理使用者選擇冰箱和操作的視圖。
-    *   `apps/photos/`: 儲存照片元數據 (`Photo` 模型)、處理圖片上傳至 S3。
-    *   `apps/inventory/`: 儲存和管理 LLM 辨識出的物品 (`RecognizedItem` 模型)、提供物品查詢視圖。
-*   **關鍵服務層：**
-    *   `ESP32CamService`: 封裝與 ESP32-CAM API 的通訊邏輯。
-    *   `ImageRecognitionService`: 封裝與 LLM API 的通訊、Prompt 構造和結果解析邏輯。
-*   **異步任務：** 使用 Celery (配合 Redis 或 RabbitMQ 作為 Broker) 處理耗時的圖像分析任務，避免阻塞使用者請求。
-
-**5.3. 資料庫模型概覽 (主要模型)**
-
-*   **`User` (來自 `django.contrib.auth.models`)**: 存儲使用者帳號資訊。
-*   **`FridgeDevice` (`fridges` app)**:
-    *   `name` (CharField), `device_id_esp` (CharField, unique), `ip_address` (GenericIPAddressField), `port` (IntegerField), `location_description` (TextField), `is_active` (BooleanField), `created_at`, `updated_at`.
-*   **`Photo` (`photos` app)**:
-    *   `fridge_device` (ForeignKey to `FridgeDevice`), `image` (ImageField, upload_to S3), `timestamp_esp` (DateTimeField), `content_type_esp` (CharField), `uploaded_by` (ForeignKey to `User`), `uploaded_at` (DateTimeField), `recognition_status` (CharField), `raw_llm_response` (JSONField, optional).
-*   **`RecognizedItem` (`inventory` app)**:
-    *   `photo` (ForeignKey to `Photo`), `name` (CharField), `quantity` (CharField/IntegerField), `estimated_expiry_info` (TextField), `placement_date` (DateField), `owner` (ForeignKey to `User`), `added_at` (DateTimeField), `notes` (TextField, optional).
-*   **`FridgeOperationLog` (`fridges` app - 可選但推薦)**:
-    *   `user` (ForeignKey to `User`), `fridge_device` (ForeignKey to `FridgeDevice`), `operation_type` (CharField), `operation_start_time` (DateTimeField), `photo_taken` (OneToOneField to `Photo`, nullable).
-
-**5.4. 外部服務整合**
-
-*   **AWS S3 (Simple Storage Service)：** 用於儲存拍攝的冰箱照片。通過 `django-storages` 和 `boto3` 庫整合。
-*   **OpenAI 相容格式的 LLM API：** 用於圖像內容識別。通過 `requests` 庫調用。API 金鑰等敏感資訊使用 `python-dotenv` 管理，從環境變數讀取。
+*   **5.4. 外部服務整合**
+    *   **AWS S3 (Simple Storage Service)：** 用於持久化儲存拍攝的冰箱照片。通過 `django-storages` 和 `boto3` 庫整合。
+    *   **OpenAI 相容格式的 LLM API：** 用於圖像內容識別。通過 `requests` 庫調用。
+    *   **AWS API Gateway：** 用於接收來自 ESP32-CAM 的圖像數據推送 (模式一)。配置 API 金鑰進行請求驗證，並將請求路由到 AWS Lambda。
+    *   **AWS Lambda：** 由 API Gateway 觸發，負責處理來自 ESP32-CAM 的圖像數據，將其存儲到 S3，並向後端系統發送通知 (模式一)。
+    *   **IAM (Identity and Access Management)：** 用於管理 AWS 服務 (S3, API Gateway, Lambda) 的權限。
 
 ---
 
@@ -248,27 +162,36 @@
 *   **異步任務隊列：** Celery
 *   **消息中間件 (Broker for Celery)：** Redis (推薦) / RabbitMQ
 *   **圖像儲存：** AWS S3
+*   **雲端 API 服務：** AWS API Gateway
+*   **雲端無伺服器計算：** AWS Lambda
+*   **雲端身份與訪問管理：** AWS IAM
 *   **環境變數管理：** `python-dotenv`
-*   **HTTP 請求庫：** `requests` (用於調用 ESP32-CAM 和 LLM API)
-*   **AWS SDK for Python:** `boto3` (由 `django-storages` 間接使用)
+*   **HTTP 請求庫：** `requests` (用於調用 ESP32-CAM 和 LLM API，以及後端可能需要回調 API Gateway 或 Lambda)
+*   **AWS SDK for Python:** `boto3` (用於與 S3, Lambda, API Gateway 等互動)
 *   **Django S3 整合：** `django-storages`
-*   **前端：** Django Templates, HTML, CSS, JavaScript (用於基本交互，無需複雜前端框架)
+*   **前端：** Django Templates, HTML, CSS, JavaScript (用於基本交互)
 
 ---
 
 **7. 非功能性需求 (初步)**
 
-*   **安全性：**
-    *   使用者密碼需加密儲存。
-    *   API 金鑰 (AWS, LLM) 不得硬編碼，應通過環境變數配置。
-    *   對使用者輸入進行適當的驗證和清理。
-    *   實施基於角色的授權。
-*   **易用性：**
-    *   為管理員和冰箱使用者提供清晰、直觀的操作介面。
-    *   對異步處理（如圖像分析）提供明確的狀態反饋。
-*   **可靠性：**
-    *   對與 ESP32-CAM 和 LLM API 的通訊進行錯誤處理和重試機制（初步）。
-    *   詳細的日誌記錄，便於問題排查。
-*   **性能：**
-    *   異步處理圖像分析，避免阻塞使用者。
-    *   資料庫查詢優化。
+*   **安全性：** 使用者密碼需加密儲存。API 金鑰 (AWS, LLM, ESP32 使用的 API Gateway 金鑰) 不得硬編碼，應通過環境變數或安全方式配置。對使用者輸入進行適當的驗證和清理。實施基於角色的授權。雲端資源 (S3, API Gateway, Lambda) 的訪問權限需通過 IAM 精細控制。
+*   **易用性：** 為管理員和冰箱使用者提供清晰、直觀的操作介面。對異步處理（如圖像分析）提供明確的狀態反饋。
+*   **可靠性：** 對與 ESP32-CAM 和外部服務 (LLM API, AWS 服務) 的通訊進行錯誤處理和重試機制（初步）。詳細的日誌記錄，便於問題排查。確保在模式一中，Lambda 到後端的通知機制穩定可靠。
+*   **性能：** 異步處理圖像分析，避免阻塞使用者請求。資料庫查詢優化。考慮 ESP32 在低帶寬下的圖像傳輸效率。
+
+---
+
+**8. 未來擴展方向 (PoC 範圍外)**
+
+*   更精確的物品進出追蹤（例如，通過比較前後兩次照片自動識別新增或移除的物品）。
+*   整合門感應器，實現開關門自動觸發拍照，而非依賴使用者點擊介面按鈕。
+*   在 ESP32 上運行邊緣 AI 模型，進行初步的物品識別或過濾。
+*   添加物品分類和標籤功能。
+*   基於預估保質期提供過期提醒。
+*   移動應用程式介面。
+*   支援多冰箱場景下的負載均衡和管理。
+*   更詳細的使用者行為分析報告。
+*   整合其他類型的傳感器（溫度、濕度等）。
+
+---

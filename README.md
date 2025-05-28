@@ -1,200 +1,216 @@
 # Smart Fridge Guardian
 
-A project leveraging IoT, Fog Computing, and Cloud technologies to create a smarter shared refrigerator experience, aiming to reduce food waste and prevent item misappropriation in shared environments like dorms or offices.
+*   **English Version README: [README_EN.md](./README_EN.md)**
+*   **Web Introduction: [GitHub Pages](https://hank1224.github.io/SmartFridgeGuardian/)**
 
-**Check out our Proposal: [Canva](https://www.canva.com/design/DAGj9VkcseQ/b5yoc1Te6HAapWB0cU6A4Q/edit?utm_content=DAGj9VkcseQ&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)**
+## 概念驗證 (PoC) 實施
 
-**Web Introduction: [GitHub Pages](https://hank1224.github.io/SmartFridgeGuardian/)**
+本專案專注於建構一個**概念驗證 (PoC)** 系統，以展示「智慧冰箱守護者」概念的核心可行性和基本功能，並採用明確定義的技術棧。
 
-This repository contains the implementation of the Proof of Concept (PoC) version.
+### 簡介與問題陳述
 
-## Table of Contents
+學生宿舍、社團辦公室或共享辦公空間中的共享冰箱雖然方便，但經常導致管理問題：
 
-*   [Full Project Vision](#full-project-vision)
-*   [Proof of Concept (PoC) Implementation (This Repository)](#proof-of-concept-poc-implementation-this-repository)
-    *   [Introduction & Problem Statement](#introduction--problem-statement)
-    *   [PoC Goals](#poc-goals)
-    *   [PoC Scope & Limitations](#poc-scope--limitations)
-    *   [Target Users](#target-users)
-    *   [System Architecture (PoC)](#system-architecture-poc)
-    *   [Technology Stack (PoC)](#technology-stack-poc)
-    *   [Core Functionality Flow (PoC)](#core-functionality-flow-poc)
-    *   [Hardware Requirements (PoC)](#hardware-requirements-poc)
-*   [Getting Started](#getting-started)
-*   [Usage](#usage)
-*   [Scalability & Future Enhancements](#scalability--future-enhancements)
-*   [Challenges & Risks](#challenges--risks)
-*   [License](#license)
+*   **物品被竊/誤用：** 物品神秘消失，造成摩擦。
+*   **食物腐敗與浪費：** 物品被遺忘在冰箱深處並過期。
+*   **混亂的管理：** 難以追蹤物品所有權、放入時間和保質期。
+*   **低效的方法：** 目前如便利貼或口頭約定等方式往往被忽略且效率低下。
 
-## Full Project Vision
+本 PoC 旨在利用物聯網 (IoT) 裝置 (ESP32-CAM) 和雲端後端 (Django on AWS) 技術，建構一個能初步解決這些問題的系統，提升共享冰箱的使用體驗。
 
-The ultimate goal of the **Smart Fridge Guardian** project is to develop a comprehensive, intelligent system for managing shared refrigerators. In its complete form, the system would tackle common issues like:
+### PoC 目標
 
-1.  **Food Theft/Misappropriation:** By tracking who accesses the fridge and potentially recognizing items, reducing the "who drank my milk?" problem.
-2.  **Food Waste:** Monitoring item expiry dates and reminding users, preventing food from being forgotten and spoiling.
-3.  **Lack of Effective Management:** Providing clear tracking of item ownership, registration time, and expiry dates.
-4.  **Low Engagement:** Replacing tedious manual methods (like labels) with an interactive and tech-driven approach.
+主要目標是建構一個可運作的 PoC 系統，展示以下核心功能：
 
-The full system envisions advanced features such as **automatic item recognition** using computer vision, **weight sensing** shelves to monitor quantity, sophisticated **anomaly detection** for suspicious activities, and potentially **social features** for item sharing or gifting within the user group. It aims to be a robust solution integrating Edge AI, Fog processing, and comprehensive Cloud services for data analysis, user interaction, and notifications.
+1.  **使用者操作與圖像採集：** 允許已登入的使用者透過網頁介面選擇冰箱並執行「放入」或「取出」物品的操作，操作時系統觸發 ESP32-CAM 拍照。
+2.  **圖像上傳與儲存：** 支援兩種圖像上傳機制（ESP32 主動推送到雲端，或後端從 ESP32 拉取），並將拍攝的照片上傳至雲端儲存 (AWS S3)。
+3.  **AI 圖像內容識別：** 系統自動調用大型語言模型 (LLM) API 分析 S3 中的照片，識別物品名稱、數量及推測保質期。
+4.  **物品追蹤與資料儲存：** 將 LLM 的識別結果與操作用戶關聯，並將物品資訊（擁有者、放入時間、識別結果等）存儲於後端資料庫。
+5.  **資訊查詢介面：**
+    *   提供介面供系統管理員管理冰箱設備。
+    *   提供介面供冰箱使用者查看冰箱當前大致內容（基於最新照片分析）及個人存放的物品列表。
+6.  **使用者管理基礎：** 實現基本的使用者註冊、登入及角色區分（管理員、冰箱使用者）。
 
-### Full Project System Architecture
+### PoC 範圍與限制
 
-![Full Project Architecture](./static/full_version_arch.jpg)
+此 PoC 實施有以下限制：
 
----
+*   **圖像識別依賴 LLM：** 物品識別的準確性和細節程度依賴所選 LLM 的能力。
+*   **「取出」操作簡化：** 「取出」物品時，系統仍會拍照並分析。PoC 階段**不會**自動比較照片判斷具體取出了哪些物品，而是記錄操作和當時的快照。
+*   **無高級感測器：** 不包含重量感測器等高級硬體。
+*   **無門磁自動觸發 (PoC 核心流程)：** PoC 核心流程依賴使用者在介面點擊觸發拍照，而非開門自動拍照（儘管 ESP32 硬體可擴展支援）。
+*   **使用者介面 (UI)：** 優先考慮功能實現，而非美觀設計。
+*   **安全性：** 實現基礎安全措施，但非生產級別的全面加固。
+*   **通知機制：** PoC 核心不包含自動過期提醒等通知功能（可作為未來擴展）。
 
-## Proof of Concept (PoC) Implementation (This Repository)
+### 目標使用者
 
-This repository focuses on building a **Proof of Concept (PoC)** system to demonstrate the core feasibility and essential functionalities of the Smart Fridge Guardian concept using a defined technology stack.
+*   居住在宿舍並使用共享冰箱的學生。
+*   使用共享辦公室冰箱的社團成員或小型團隊。
+*   任何需要更好管理共享冰箱資源的群體。
 
-### Introduction & Problem Statement
+### PoC 系統架構
 
-Shared refrigerators in student dorms, club offices, or co-working spaces are convenient but often lead to management issues:
+PoC 採用簡化的客戶端-伺服器架構，整合了邊緣裝置和雲端後端服務。
 
-*   **Item Theft/Misappropriation:** Items mysteriously disappear, causing friction.
-*   **Food Spoilage & Waste:** Items get lost in the back and expire unnoticed.
-*   **Chaotic Management:** Difficulty tracking ownership, registration time, and expiry dates.
-*   **Ineffective Methods:** Current solutions like sticky notes or verbal agreements are often ignored and inefficient.
+![PoC 架構示意圖](./static/Smart_Fridge_PoC_Arch.jpg)
 
-This PoC aims to use IoT (ESP32-CAM), Fog Computing (Raspberry Pi), and Cloud (AWS) to build a system that addresses these problems in a foundational way, enhancing the shared fridge experience.
+*   **邊緣層 (Edge Layer)：**
+    *   **硬體：** ESP32-CAM 開發板 (含 WiFi、相機模組)。
+    *   **軟體：** Arduino C++ 韌體。
+    *   **功能：**
+        *   連接 Wi-Fi。
+        *   **模式一 (ESP32 主動推送)：** 接收後端觸發信號（可選，或由其他感測器觸發），拍照，將圖像數據和元數據 (設備 ID、時間戳、操作關聯 ID 等) 推送至 AWS API Gateway。
+        *   **模式二 (後端主動拉取)：** 運行 HTTP 伺服器，接收 Django 後端的拍照指令 (`/api/photos`)，拍照，並將 Base64 編碼的圖像數據和元數據作為回應返回。
+*   **後端與雲端層 (Backend & Cloud Layer)：**
+    *   **核心應用 (Django Backend)：**
+        *   **框架：** Python, Django。
+        *   **運行環境：** 雲端伺服器 (如 AWS EC2, Heroku, 或其他 PaaS)。
+        *   **功能：**
+            *   使用者管理與認證 (管理員、冰箱使用者)。
+            *   冰箱設備管理 (註冊 ESP32-CAM 設備資訊)。
+            *   處理使用者「放入/取出」物品的請求。
+            *   根據配置，觸發 ESP32-CAM 拍照（模式一信號或模式二拉取）。
+            *   接收圖像數據（模式二直接接收，模式一從 Lambda 通知接收 S3 路徑）。
+            *   將圖像上傳至 AWS S3 (若為模式二，或模式一中 Lambda 處理後通知)。
+            *   創建 `Photo` 記錄。
+            *   觸發異步任務 (Celery) 調用 LLM API 進行圖像分析。
+            *   解析 LLM 結果，創建 `RecognizedItem` 記錄並存儲至資料庫。
+            *   提供 API 接口供前端查詢冰箱內容和使用者個人物品。
+    *   **資料庫 (Database)：**
+        *   **類型：** PostgreSQL (推薦) 或 MySQL/SQLite。
+        *   **儲存：** `User`, `FridgeDevice`, `Photo`, `RecognizedItem` 等模型數據。
+    *   **對象儲存 (Object Storage)：**
+        *   **服務：** AWS S3。
+        *   **用途：** 持久化儲存 ESP32-CAM 拍攝的冰箱照片。
+    *   **大型語言模型服務 (LLM Service)：**
+        *   **接口：** OpenAI 相容格式的 API。
+        *   **用途：** 圖像內容識別（物品、數量、預估保質期）。
+    *   **異步任務處理 (Asynchronous Task Processing)：**
+        *   **工具：** Celery (配合 Redis 或 RabbitMQ 作為 Broker)。
+        *   **用途：** 處理耗時的 LLM 圖像分析任務，避免阻塞主應用。
+    *   **(模式一特定組件) AWS API Gateway & Lambda：**
+        *   **API Gateway：** 接收 ESP32-CAM 主動推送的圖像數據，進行初步驗證，觸發 Lambda。
+        *   **AWS Lambda：** 處理來自 API Gateway 的請求，將圖像存儲到 S3，並通知 Django 後端 S3 路徑及相關元數據。
+    *   **前端介面 (Frontend Interface)：**
+        *   **技術：** Django Templates, HTML, CSS, JavaScript。
+        *   **功能：** 提供使用者註冊登入、選擇冰箱、操作冰箱（觸發拍照）、查看個人物品、查看冰箱內容等介面。提供管理員管理冰箱設備的介面。
 
-### PoC Goals
+### PoC 技術棧
 
-The primary objective is to build a working PoC system demonstrating the core functionalities:
+*   **硬體：** ESP32-CAM 開發板。
+*   **邊緣端軟體：** Arduino IDE (C++)。
+*   **後端：** Python, Django。
+*   **資料庫：** PostgreSQL / MySQL / SQLite。
+*   **異步任務隊列：** Celery。
+*   **消息中間件 (Celery Broker)：** Redis / RabbitMQ。
+*   **圖像儲存：** AWS S3。
+*   **圖像識別：** OpenAI 相容格式的 LLM API。
+*   **HTTP 請求庫 (Python)：** `requests`。
+*   **AWS SDK (Python)：** `boto3`。
+*   **Django S3 整合：** `django-storages`。
+*   **前端：** Django Templates, HTML, CSS, JavaScript。
+*   **(模式一所需) 雲端 API 服務：** AWS API Gateway。
+*   **(模式一所需) 雲端無伺服器計算：** AWS Lambda。
 
-1.  **Item Registration:** Allow users to register items (name, owner, estimated expiry date) via a simple Web/Mobile App.
-2.  **Status Monitoring:** Use an edge device (ESP32-CAM) to detect fridge door opening events and capture a photo upon opening.
-3.  **Data Transmission:** Reliably transmit the door event (timestamp) and photo identifier/data through a Fog node (Raspberry Pi) to the AWS Cloud.
-4.  **Cloud Processing & Storage:** Store user data, item inventory, event logs, and photos on AWS. Implement basic expiry reminder logic.
-5.  **Simple Notifications:** Implement AWS-based expiry reminders (e.g., via Email/SNS).
-6.  **Data Visualization:** Provide a basic web dashboard displaying the current list of items in the fridge (owner, expiry) and recent door opening events.
+### PoC 核心功能流程
 
-### PoC Scope & Limitations
+1.  **管理員 - 註冊冰箱設備：**
+    *   管理員登入 -> 導航至冰箱管理頁面 -> 新增冰箱設備（名稱、ESP32 的 `device_id`、IP 地址 (模式二需要) 等）。
+2.  **使用者 - 放入物品：**
+    *   使用者登入 -> 選擇目標冰箱 -> 點擊「放入物品」。
+    *   前端發送請求 (含 `fridge_id`, `user_id`, `operation_type='put_in'`) 至 Django 後端。
+    *   Django 後端根據冰箱配置，執行圖像採集：
+        *   **模式一 (ESP32 推送)：** 後端可向 ESP32 發送觸發信號 (含操作 ID)，ESP32 拍照並將圖像數據和元數據 POST 至 AWS API Gateway -> Lambda -> S3，Lambda 通知 Django 後端 S3 路徑。
+        *   **模式二 (後端拉取)：** 後端向 ESP32 的 `/api/photos` 端點發送 GET 請求，ESP32 拍照並返回 Base64 圖像數據，後端接收後上傳至 S3。
+    *   Django 後端創建 `Photo` 記錄 (狀態 `pending`)，關聯使用者和冰箱。
+    *   觸發 Celery 異步任務：任務從 S3 獲取圖片，調用 LLM API 分析，解析結果，創建 `RecognizedItem` 記錄 (擁有者為操作用戶)，更新 `Photo` 狀態。
+    *   使用者稍後可在「我的物品」或冰箱內容頁面查看識別結果。
+3.  **使用者 - 取出物品 (簡化流程)：**
+    *   流程類似「放入物品」，但操作類型為 `take_out`。系統仍會拍照、上傳、分析。PoC 階段不對比照片判斷取出內容。
+4.  **使用者 - 查看個人物品：**
+    *   使用者登入 -> 導航至「我的物品」 -> 後端查詢並展示該使用者放入且已識別的物品列表。
+5.  **使用者 - 查看冰箱當前內容：**
+    *   使用者選擇冰箱 -> 後端查詢該冰箱最新一張成功分析的照片所識別出的物品列表並展示。
 
-This PoC implementation has the following limitations:
+### PoC 硬體需求
 
-*   **No** complex image recognition (e.g., automatic item/face identification).
-*   **No** advanced sensors like weight sensors.
-*   Simplified "suspicious activity" logic (e.g., only logs door openings; manual marking of item status in the PoC).
-*   User Interface (UI) prioritizes functionality over aesthetics.
+| 項目                  | 規格/型號             | 數量 | 備註                                     |
+| :-------------------- | :-------------------- | :--- | :--------------------------------------- |
+| ESP32-CAM 開發板      | 含 OV2640 相機        | 1    | 內建 WiFi                                |
+| Micro USB 數據線      | 用於 ESP32 供電/燒錄  | 1    |                                          |
+| 5V USB 電源供應器     | 為 ESP32 供電         | 1    |                                          |
+| **AWS 雲端服務**      | S3, API Gateway, Lambda (模式一), LLM API | N/A  | PoC 階段應盡量控制在免費額度內或低成本   |
+| **後端運行環境**      | 雲端伺服器或本地開發機 | 1    | 用於運行 Django, Celery, 資料庫          |
 
-### Target Users
+## 開始使用
 
-*   Students living in dorms with shared refrigerators.
-*   Members of clubs or small teams using a shared office fridge.
-*   Any group needing better management of a shared fridge resource.
+*(本節應提供如何設定和運行 PoC 程式碼的說明)*
 
-### System Architecture (PoC)
+1.  **硬體設定：** 為 ESP32-CAM 連接電源。
+2.  **邊緣端設定 (ESP32-CAM)：**
+    *   克隆本儲存庫。
+    *   導航至 `/esp32` 或類似目錄。
+    *   在韌體程式碼中配置 WiFi 憑證。
+    *   **根據所選模式配置：**
+        *   **模式一：** 配置 AWS API Gateway 的端點 URL 和 API Key。
+        *   **模式二：** 無需特定配置，後端將通過其 IP 訪問。
+    *   使用 Arduino IDE 或 PlatformIO 編譯並燒錄韌體。透過串口監視器獲取 ESP32 的 IP 地址（模式二中後端可能需要）。
+3.  **後端設定 (Django)：**
+    *   克隆本儲存庫至您的伺服器或本地開發機。
+    *   導航至後端專案目錄 (例如 `/backend`)。
+    *   建立 Python 虛擬環境並安裝依賴 (`requirements.txt`)。
+    *   配置環境變數 (`.env` 文件)：資料庫連接字串、AWS S3 金鑰、LLM API 金鑰、Celery Broker URL 等。
+    *   執行資料庫遷移 (`python manage.py migrate`)。
+    *   運行 Django 開發伺服器 (`python manage.py runserver`)。
+    *   運行 Celery worker (`celery -A your_project_name worker -l info`)。
+4.  **雲端設定 (AWS - 主要為模式一和 S3)：**
+    *   設定 S3 儲存桶並配置好權限。
+    *   **若使用模式一：**
+        *   設定 API Gateway，創建 `/upload` 端點 (POST)，配置 API 金鑰驗證。
+        *   創建 Lambda 函數 (Python/Node.js)，處理來自 API Gateway 的請求，程式碼需包含：解碼 Base64 (如果 ESP32 推送的是 Base64 JSON)、上傳圖像至 S3、向 Django 後端的回調 API 發送通知 (包含 S3 路徑、設備 ID、操作關聯 ID 等)。
+        *   配置 API Gateway 觸發此 Lambda 函數。
+    *   設定 IAM 權限，確保 Django 後端 (若運行在 EC2 上) 或 Lambda 函數有權限訪問 S3。
+5.  **運行系統：**
+    *   確保 ESP32-CAM 已連網並運行。
+    *   確保 Django 後端應用和 Celery worker 正在運行。
+    *   訪問 Django 提供的網頁介面。
+    *   作為管理員登入並註冊冰箱設備，填寫 ESP32 的 IP (模式二) 或確保設備 ID 與 ESP32 韌體中的 `DEVICE_ID` 一致。
+    *   作為冰箱使用者登入，選擇冰箱並執行「放入物品」操作。
+    *   檢查 S3 儲存桶是否有新照片上傳，資料庫中是否有 `Photo` 和 `RecognizedItem` 記錄，以及網頁介面是否更新。
 
-The PoC employs a typical three-layer IoT architecture: Edge, Fog, and Cloud.
+*(註：根據您的實際程式碼結構添加更具體的指令和配置細節)*
 
-![PoC Architecture](./static/PoC_version_arch.jpg)
+## 使用方式
 
-*   **Edge Layer:**
-    *   **Hardware:** ESP32-CAM board (with WiFi, Bluetooth, Camera), Reed switch or Light Dependent Resistor (LDR) to detect door state.
-    *   **Software:** MicroPython or Arduino C++ firmware.
-    *   **Function:** Detects door opening, captures a photo, packages event data (timestamp) and photo, sends data to the Fog node (Raspberry Pi) via WiFi (MQTT or HTTP).
-*   **Fog Layer (Raspberry Pi):**
-    *   **Hardware:** Raspberry Pi (e.g., Model 3B+ or 4).
-    *   **Software:** Python script, MQTT Broker (e.g., Mosquitto if using MQTT) or Web Server (e.g., Flask if using HTTP).
-    *   **Function:** Acts as a data relay and buffer (improves resilience if cloud connection drops), performs optional preprocessing, serves as a security gateway, and uploads data securely to AWS (using AWS SDK/boto3 or MQTT) via API Gateway or IoT Core.
-*   **Cloud Layer (AWS):**
-    *   **Core Services:**
-        *   **AWS IoT Core (Optional, Recommended for MQTT):** Secure device connection, management, and communication.
-        *   **API Gateway:** Provides RESTful API endpoints for the Web/App frontend and the Fog node (if using HTTP).
-        *   **AWS Lambda:** Serverless compute for processing data (triggered by API Gateway/IoT Core/EventBridge). Stores metadata in DynamoDB, photos in S3, triggers notifications via SNS, and performs scheduled expiry checks.
-        *   **Amazon DynamoDB:** NoSQL database for `Users`, `Items` (ID, name, owner, registered\_ts, expiry\_date, photo\_s3\_key, status), and `Events` (timestamp, trigger\_device\_id, photo\_s3\_key).
-        *   **Amazon S3:** Object storage for photos captured by the ESP32-CAM.
-        *   **Amazon SNS:** Sends notifications (Email/SMS) for expiry reminders or events.
-        *   **Amazon EventBridge:** Schedules regular triggers (e.g., daily) for the Lambda function performing expiry checks.
-    *   **Frontend & Dashboard:**
-        *   **Web App / Mobile App:** Interface for users to register items, view status, mark items as taken. Developed using frameworks like React/Vue/Angular, interacting with the backend via API Gateway.
-        *   **Web Dashboard:** Displays fridge contents, event logs. Can be part of the App or a separate page.
+1.  **管理冰箱：** 系統管理員登入後，可以新增、查看或編輯已註冊的冰箱設備資訊。
+2.  **存放物品：** 冰箱使用者登入後，選擇一個冰箱，點擊「放入物品」。將物品放入實際冰箱後，在介面確認。系統將觸發拍照、上傳及 AI 分析流程。
+3.  **取出物品：** 類似放入物品，使用者選擇「取出物品」並確認，系統記錄當前冰箱快照。
+4.  **查看狀態：**
+    *   在「我的物品」頁面查看自己放入並被識別的物品列表（名稱、數量、放入時間、預估保質期等）。
+    *   選擇特定冰箱，查看其當前（基於最新成功分析的照片）大致內容。
 
-### Technology Stack (PoC)
+## 可擴展性與未來增強
 
-*   **Hardware:** ESP32-CAM, Raspberry Pi 4 Model B, Reed Switch, Jumper Wires, USB Power Supplies.
-*   **Edge Software:** MicroPython / Arduino IDE (C++), Paho MQTT Client (if using MQTT).
-*   **Fog Software:** Python 3, Paho MQTT / Flask, AWS SDK (boto3).
-*   **Cloud (AWS):** IoT Core (Optional), API Gateway, Lambda (Python/Node.js), DynamoDB, S3, SNS, EventBridge.
-*   **Frontend (Optional):** HTML, CSS, JavaScript (with React/Vue/Angular) or Mobile App Frameworks (React Native/Flutter).
+雖然這是 PoC，但該架構允許未來擴展：
 
-### Core Functionality Flow (PoC)
+*   **功能性：**
+    *   **更精確的物品追蹤：** 例如，通過比較前後兩次照片自動識別新增或移除的物品。
+    *   **整合門感應器：** 實現開關門自動觸發拍照。
+    *   **邊緣 AI 優化：** 在 ESP32 上運行輕量級模型進行初步過濾或檢測。
+    *   **過期提醒：** 基於預估保質期提供通知。
+    *   **更豐富的 UI/UX：** 開發獨立前端應用或移動應用。
+*   **架構：**
+    *   **多冰箱管理：** 雲端後端可擴展以管理多個冰箱單元。
+    *   **負載均衡/擴展：** 利用雲服務如 AWS ELB, Auto Scaling 應對增長的使用者負載。
+    *   **數據分析：** 使用 BI 工具分析使用模式、食物浪費等數據。
 
-1.  **Item Registration:** User -> App/Web -> API Gateway -> Lambda (RegisterItem) -> DynamoDB (Write to `Items` table).
-2.  **Door Open & Photo Capture:** Reed Switch Trigger -> ESP32-CAM (Capture Photo) -> WiFi -> RPi (Receive/Forward) -> AWS IoT Core / API Gateway -> Lambda (ProcessDoorEvent) -> S3 (Store Photo), DynamoDB (Write to `Events` table, update photo link).
-3.  **Expiry Reminder:** EventBridge (Scheduled Trigger) -> Lambda (CheckExpiry) -> DynamoDB (Query `Items` table) -> [If Expiring/Expired] -> SNS (Send notification to item owner).
-4.  **Data Viewing:** User -> App/Web Dashboard -> API Gateway -> Lambda (GetFridgeContents/GetEvents) -> DynamoDB (Read data) -> App/Web (Display data).
+## 挑戰與風險
 
-### Hardware Requirements (PoC)
-
-| Item                  | Specification/Model      | Quantity | Notes                            |
-| :-------------------- | :----------------------- | :------- | :------------------------------- |
-| ESP32-CAM Dev Board   | Incl. OV2640 Camera      | 1        | Built-in WiFi/BT                 |
-| Raspberry Pi          | 4 Model B (2GB+ recomm.) | 1        | Incl. SD Card, Power Supply    |
-| Reed Switch           | Normally Open (NO) type  | 1        | For door open/close detection    |
-| Jumper Wires          | M-F / F-F                | Several  | For connecting components        |
-| Micro USB Cable       | For ESP32 Power/Flash    | 1        |                                  |
-| USB-C Power Supply    | For Raspberry Pi 4       | 1        |                                  |
-| Micro SD Card         | 16GB+ Class 10           | 1        | For Raspberry Pi OS              |
-| **AWS Cloud Services**| Various Services         | N/A      | PoC should stay within Free Tier |
-
-## Getting Started
-
-*(This section should provide instructions on how to set up and run the PoC code.)*
-
-1.  **Hardware Setup:** Connect the reed switch to the ESP32-CAM. Power the ESP32-CAM and Raspberry Pi. Ensure the RPi is connected to the local network.
-2.  **Edge Setup (ESP32-CAM):**
-    *   Clone this repository.
-    *   Navigate to the `/edge` or `/esp32` directory.
-    *   Configure WiFi credentials and the Raspberry Pi's IP address/endpoint in the firmware code.
-    *   Flash the firmware using Arduino IDE or esptool/Thonny (for MicroPython).
-3.  **Fog Setup (Raspberry Pi):**
-    *   Clone this repository onto the Raspberry Pi.
-    *   Navigate to the `/fog` or `/rpi` directory.
-    *   Set up a Python virtual environment and install dependencies (`requirements.txt`).
-    *   Configure AWS credentials (use IAM roles or configure `~/.aws/credentials`).
-    *   Configure the script (e.g., MQTT broker settings if used, AWS endpoints).
-    *   Run the main Python script (e.g., `python fog_gateway.py`).
-4.  **Cloud Setup (AWS):**
-    *   Set up the required AWS services (API Gateway, Lambda, DynamoDB tables, S3 bucket, SNS topic, EventBridge rule) manually via the console or using an Infrastructure as Code tool (like Terraform or AWS SAM/CDK - *if provided*). Check the `/cloud` or `/aws` directory for configurations or Lambda code.
-    *   Deploy the Lambda function code.
-    *   Configure API Gateway to trigger the appropriate Lambda function(s).
-    *   Set up IAM permissions correctly for Lambda to access DynamoDB, S3, and SNS.
-    *   Subscribe your email address to the SNS topic for notifications.
-5.  **Frontend Setup (Optional):**
-    *   If a web interface is included (`/frontend` or `/web`), follow its specific setup instructions (e.g., `npm install`, `npm start`). Configure the API Gateway endpoint in the frontend code.
-6.  **Running the System:** Once all components are running, open the fridge door. The ESP32 should capture an image and send it via the RPi to AWS. Check the S3 bucket, DynamoDB tables, and your email for notifications. Use the web dashboard (if available) to view data.
-
-*(Note: Add more specific commands and configuration details based on your actual code structure)*
-
-## Usage
-
-1.  **Register Items:** Use the Web App/Dashboard to add items you place in the fridge, specifying the item name and expected expiry date.
-2.  **Automatic Logging:** When the fridge door is opened, the system automatically logs the event time and captures a photo, storing them in the cloud.
-3.  **View Status:** Check the Web Dashboard to see the current inventory, who owns what, expiry dates, and recent door opening events with associated photos.
-4.  **Receive Notifications:** Get email alerts for items nearing their expiry date.
-
-## Scalability & Future Enhancements
-
-While this is a PoC, the architecture allows for future expansion:
-
-*   **Functionality:**
-    *   **Image Recognition:** Integrate AWS Rekognition or deploy lightweight models on the RPi for item/face recognition (respecting privacy).
-    *   **Weight Sensing:** Add load cells under shelves for quantity estimation.
-    *   **Smarter Alerts:** Develop more sophisticated logic for "suspicious activity" based on access patterns.
-    *   **Social Features:** Implement item sharing, gifting, or swapping within the app.
-    *   **Recipe Suggestions:** Recommend recipes based on available ingredients.
-*   **Architecture:**
-    *   **Multi-Fridge Support:** The cloud backend can be extended to manage multiple fridge units.
-    *   **Load Balancing/Scaling:** Utilize AWS ELB, Auto Scaling for increased user load.
-    *   **Data Analytics:** Use AWS QuickSight or other BI tools for insights into usage patterns, food waste, etc.
-
-## Challenges & Risks
-
-*   **Hardware Stability:** Ensuring the ESP32-CAM operates reliably in potentially cold/humid fridge environments.
-*   **Network Reliability:** Dependence on stable WiFi connectivity in dorms/offices.
-*   **Image Quality:** Poor lighting inside the fridge might affect photo usefulness.
-*   **Cloud Costs:** Potential costs if AWS Free Tier limits are exceeded (low risk for PoC).
-*   **Development Complexity:** Integrating multiple layers (hardware, embedded, fog, cloud, frontend).
-*   **Privacy Concerns:** Handling photos requires clear user consent and secure data management. Avoid storing identifiable faces in the PoC.
+*   **硬體穩定性：** 確保 ESP32-CAM 在冰箱內 (可能低溫/潮濕) 可靠運行。
+*   **網路可靠性：** 依賴宿舍/辦公室中穩定的 WiFi 連接。
+*   **圖像品質與 LLM 準確性：** 冰箱內光線不足可能影響照片品質，進而影響 LLM 識別的準確性。LLM API 的成本和響應時間也是考量因素。
+*   **雲端成本：** S3 儲存、LLM API 調用、以及其他 AWS 服務可能產生費用，需注意控制。
+*   **開發複雜性：** 整合多層次技術 (硬體嵌入式、後端 Django、Celery、雲端服務、前端)。
+*   **隱私考量：** 處理冰箱內部照片需明確使用者同意和安全的數據管理。
+*   **兩種上傳模式的維護：** 設計和維護兩種不同的圖像上傳路徑會增加系統的複雜度。
